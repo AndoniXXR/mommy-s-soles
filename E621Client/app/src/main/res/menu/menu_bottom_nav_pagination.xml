@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Saved Searches -->
+    <item
+        android:id="@+id/nav_saved"
+        android:icon="@drawable/ic_save"
+        android:title="@string/nav_saved" />
+    
+    <!-- Filter & Ordering -->
+    <item
+        android:id="@+id/nav_filter"
+        android:icon="@drawable/ic_filter"
+        android:title="@string/nav_filter" />
+    
+    <!-- Favorites -->
+    <item
+        android:id="@+id/nav_favorites"
+        android:icon="@drawable/ic_favorite_filled"
+        android:title="@string/nav_favorites" />
+</menu>

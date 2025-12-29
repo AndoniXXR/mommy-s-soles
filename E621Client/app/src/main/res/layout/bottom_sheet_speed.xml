@@ -1,0 +1,142 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:background="@color/background_dark"
+    android:paddingTop="16dp"
+    android:paddingBottom="24dp">
+
+    <!-- Title -->
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/playback_speed"
+        android:textColor="@android:color/white"
+        android:textSize="16sp"
+        android:textStyle="bold"
+        android:paddingStart="20dp"
+        android:paddingEnd="20dp"
+        android:paddingBottom="16dp" />
+
+    <!-- Speed options -->
+    <RadioGroup
+        android:id="@+id/speedRadioGroup"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <RadioButton
+            android:id="@+id/speed025"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:text="0.25x"
+            android:textColor="@android:color/white"
+            android:textSize="15sp"
+            android:paddingStart="20dp"
+            android:paddingEnd="20dp"
+            android:button="@null"
+            android:drawableEnd="?android:attr/listChoiceIndicatorSingle"
+            android:buttonTint="@color/colorPrimary"
+            android:background="?android:attr/selectableItemBackground" />
+
+        <RadioButton
+            android:id="@+id/speed05"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:text="0.5x"
+            android:textColor="@android:color/white"
+            android:textSize="15sp"
+            android:paddingStart="20dp"
+            android:paddingEnd="20dp"
+            android:button="@null"
+            android:drawableEnd="?android:attr/listChoiceIndicatorSingle"
+            android:buttonTint="@color/colorPrimary"
+            android:background="?android:attr/selectableItemBackground" />
+
+        <RadioButton
+            android:id="@+id/speed075"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:text="0.75x"
+            android:textColor="@android:color/white"
+            android:textSize="15sp"
+            android:paddingStart="20dp"
+            android:paddingEnd="20dp"
+            android:button="@null"
+            android:drawableEnd="?android:attr/listChoiceIndicatorSingle"
+            android:buttonTint="@color/colorPrimary"
+            android:background="?android:attr/selectableItemBackground" />
+
+        <RadioButton
+            android:id="@+id/speed1"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:text="Normal"
+            android:textColor="@android:color/white"
+            android:textSize="15sp"
+            android:paddingStart="20dp"
+            android:paddingEnd="20dp"
+            android:button="@null"
+            android:drawableEnd="?android:attr/listChoiceIndicatorSingle"
+            android:buttonTint="@color/colorPrimary"
+            android:background="?android:attr/selectableItemBackground" />
+
+        <RadioButton
+            android:id="@+id/speed125"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:text="1.25x"
+            android:textColor="@android:color/white"
+            android:textSize="15sp"
+            android:paddingStart="20dp"
+            android:paddingEnd="20dp"
+            android:button="@null"
+            android:drawableEnd="?android:attr/listChoiceIndicatorSingle"
+            android:buttonTint="@color/colorPrimary"
+            android:background="?android:attr/selectableItemBackground" />
+
+        <RadioButton
+            android:id="@+id/speed15"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:text="1.5x"
+            android:textColor="@android:color/white"
+            android:textSize="15sp"
+            android:paddingStart="20dp"
+            android:paddingEnd="20dp"
+            android:button="@null"
+            android:drawableEnd="?android:attr/listChoiceIndicatorSingle"
+            android:buttonTint="@color/colorPrimary"
+            android:background="?android:attr/selectableItemBackground" />
+
+        <RadioButton
+            android:id="@+id/speed175"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:text="1.75x"
+            android:textColor="@android:color/white"
+            android:textSize="15sp"
+            android:paddingStart="20dp"
+            android:paddingEnd="20dp"
+            android:button="@null"
+            android:drawableEnd="?android:attr/listChoiceIndicatorSingle"
+            android:buttonTint="@color/colorPrimary"
+            android:background="?android:attr/selectableItemBackground" />
+
+        <RadioButton
+            android:id="@+id/speed2"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:text="2x"
+            android:textColor="@android:color/white"
+            android:textSize="15sp"
+            android:paddingStart="20dp"
+            android:paddingEnd="20dp"
+            android:button="@null"
+            android:drawableEnd="?android:attr/listChoiceIndicatorSingle"
+            android:buttonTint="@color/colorPrimary"
+            android:background="?android:attr/selectableItemBackground" />
+
+    </RadioGroup>
+
+</LinearLayout>

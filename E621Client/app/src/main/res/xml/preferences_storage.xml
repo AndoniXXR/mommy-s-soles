@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <!-- Custom Folder Enabled -->
+    <SwitchPreferenceCompat
+        android:key="storage_custom_folder_enabled"
+        android:title="@string/pref_storage_custom_folder_enabled_title"
+        android:summary="@string/pref_storage_custom_folder_enabled_summary"
+        android:icon="@drawable/ic_settings_gear"
+        android:defaultValue="true"
+        app:singleLineTitle="false" />
+
+    <!-- Custom Folder -->
+    <Preference
+        android:key="storage_custom_folder"
+        android:title="@string/pref_storage_custom_folder_title"
+        android:summary="@string/pref_storage_custom_folder_summary"
+        android:icon="@drawable/ic_folder"
+        android:dependency="storage_custom_folder_enabled"
+        app:singleLineTitle="false" />
+
+    <!-- File Name Mask -->
+    <Preference
+        android:key="storage_file_name_mask"
+        android:title="@string/pref_storage_file_name_title"
+        android:summary="@string/pref_storage_file_name_summary"
+        android:icon="@drawable/ic_text_format"
+        app:singleLineTitle="false" />
+
+    <!-- Overwrite Files -->
+    <SwitchPreferenceCompat
+        android:key="storage_overwrite"
+        android:title="@string/pref_storage_overwrite_title"
+        android:summary="@string/pref_storage_overwrite_summary"
+        android:icon="@drawable/ic_redo"
+        android:defaultValue="true"
+        app:singleLineTitle="false" />
+
+    <!-- Hide from Gallery -->
+    <SwitchPreferenceCompat
+        android:key="storage_hide"
+        android:title="@string/pref_storage_hide_title"
+        android:summary="@string/pref_storage_hide_summary"
+        android:icon="@drawable/ic_eye_off"
+        android:defaultValue="false"
+        app:singleLineTitle="false" />
+
+    <!-- Cache Category -->
+    <PreferenceCategory android:title="@string/pref_category_cache">
+
+        <!-- Max Cache Enabled -->
+        <SwitchPreferenceCompat
+            android:key="storage_max_cache"
+            android:title="@string/pref_storage_max_cache_title"
+            android:summary="@string/pref_storage_max_cache_summary"
+            android:icon="@drawable/ic_delete"
+            android:defaultValue="true"
+            app:singleLineTitle="false" />
+
+        <!-- Max Cache Size -->
+        <SeekBarPreference
+            android:key="storage_max_cache_slider"
+            android:title="@string/pref_storage_max_cache_slider_title"
+            android:summary="@string/pref_storage_max_cache_slider_summary"
+            android:icon="@drawable/ic_delete_sweep"
+            android:max="5000"
+            android:defaultValue="500"
+            android:dependency="storage_max_cache"
+            app:min="20"
+            app:seekBarIncrement="50"
+            app:showSeekBarValue="true"
+            app:singleLineTitle="false" />
+
+        <!-- Clear Cache -->
+        <Preference
+            android:key="storage_clear_cache"
+            android:title="@string/pref_storage_clear_cache_title"
+            android:summary="@string/pref_storage_clear_cache_summary"
+            android:icon="@drawable/ic_clear"
+            app:singleLineTitle="false" />
+
+    </PreferenceCategory>
+
+</PreferenceScreen>

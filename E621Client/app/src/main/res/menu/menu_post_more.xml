@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    
+    <item
+        android:id="@+id/action_slideshow"
+        android:title="@string/post_menu_slideshow" />
+    
+    <item
+        android:id="@+id/action_edit_post"
+        android:title="@string/post_menu_edit_post" />
+    
+    <item
+        android:id="@+id/action_add_to_set"
+        android:title="@string/post_add_to_set" />
+    
+    <item
+        android:id="@+id/action_open_browser"
+        android:title="@string/post_open_browser" />
+    
+    <item
+        android:id="@+id/action_share"
+        android:title="@string/post_share" />
+    
+    <item
+        android:id="@+id/action_copy_link"
+        android:title="@string/post_copy_link" />
+    
+    <item
+        android:id="@+id/action_copy_tags"
+        android:title="@string/post_menu_copy_tags" />
+    
+    <item
+        android:id="@+id/action_reload_post"
+        android:title="@string/post_menu_reload_post" />
+    
+    <item
+        android:id="@+id/action_check_notes"
+        android:title="@string/post_menu_check_notes" />
+    
+    <item
+        android:id="@+id/action_view_json"
+        android:title="@string/post_menu_view_json" />
+
+</menu>

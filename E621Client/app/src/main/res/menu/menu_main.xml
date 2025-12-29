@@ -1,0 +1,158 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    
+    <!-- Login group (shown when not logged in) -->
+    <group android:id="@+id/groupNotLoggedIn">
+        <item
+            android:id="@+id/menu_login"
+            android:title="@string/menu_login" />
+    </group>
+    
+    <!-- My Account submenu (shown when logged in) -->
+    <group android:id="@+id/groupLoggedIn">
+        <item android:title="@string/menu_my_account">
+            <menu>
+                <item
+                    android:id="@+id/menu_my_profile"
+                    android:title="@string/menu_my_profile" />
+                <item
+                    android:id="@+id/menu_my_favourites"
+                    android:title="@string/menu_my_favourites" />
+                <item
+                    android:id="@+id/menu_my_upvotes"
+                    android:title="@string/menu_my_upvotes" />
+                <item
+                    android:id="@+id/menu_my_posts"
+                    android:title="@string/menu_my_posts" />
+                <item
+                    android:id="@+id/menu_my_comments"
+                    android:title="@string/menu_my_comments" />
+                <item
+                    android:id="@+id/menu_my_dmail"
+                    android:title="@string/menu_my_dmail" />
+                <item
+                    android:id="@+id/menu_my_sets"
+                    android:title="@string/menu_my_sets" />
+                <item
+                    android:id="@+id/menu_logout"
+                    android:title="@string/menu_logout" />
+            </menu>
+        </item>
+    </group>
+    
+    <!-- Go to submenu -->
+    <item android:title="@string/menu_go_to">
+        <menu>
+            <item
+                android:id="@+id/menu_go_to_page"
+                android:title="@string/menu_go_to_page" />
+            <item
+                android:id="@+id/menu_go_to_random"
+                android:title="@string/menu_go_to_random" />
+            <item
+                android:id="@+id/menu_go_to_user"
+                android:title="@string/menu_go_to_user" />
+        </menu>
+    </item>
+    
+    <!-- Popular submenu -->
+    <item android:title="@string/menu_popular">
+        <menu>
+            <item
+                android:id="@+id/menu_popular_day"
+                android:title="@string/menu_popular_day" />
+            <item
+                android:id="@+id/menu_popular_week"
+                android:title="@string/menu_popular_week" />
+            <item
+                android:id="@+id/menu_popular_month"
+                android:title="@string/menu_popular_month" />
+        </menu>
+    </item>
+    
+    <!-- Browse submenu -->
+    <item android:title="@string/menu_browse">
+        <menu>
+            <item
+                android:id="@+id/menu_browse_tags"
+                android:title="@string/menu_browse_tags" />
+            <item
+                android:id="@+id/menu_browse_pools"
+                android:title="@string/menu_browse_pools" />
+            <item
+                android:id="@+id/menu_browse_artists"
+                android:title="@string/menu_browse_artists" />
+            <item
+                android:id="@+id/menu_browse_comments"
+                android:title="@string/menu_browse_comments" />
+            <item
+                android:id="@+id/menu_browse_sets"
+                android:title="@string/menu_browse_sets" />
+            <item
+                android:id="@+id/menu_browse_wiki"
+                android:title="@string/menu_browse_wiki" />
+            <item
+                android:id="@+id/menu_browse_blips"
+                android:title="@string/menu_browse_blips" />
+            <item
+                android:id="@+id/menu_browse_users"
+                android:title="@string/menu_browse_users" />
+        </menu>
+    </item>
+    
+    <!-- About submenu -->
+    <item android:title="@string/menu_about">
+        <menu>
+            <item
+                android:id="@+id/menu_about_news"
+                android:title="@string/menu_about_news" />
+            <item
+                android:id="@+id/menu_about_help"
+                android:title="@string/menu_about_help" />
+            <item
+                android:id="@+id/menu_about_about"
+                android:title="@string/menu_about_about" />
+            <item
+                android:id="@+id/menu_about_updates"
+                android:title="@string/menu_about_updates" />
+            <item
+                android:id="@+id/menu_about_feedback"
+                android:title="@string/menu_about_feedback" />
+            <item
+                android:id="@+id/menu_about_changelog"
+                android:title="@string/menu_about_changelog" />
+            <item
+                android:id="@+id/menu_about_licenses"
+                android:title="@string/menu_about_licenses" />
+            <item
+                android:id="@+id/menu_about_translate"
+                android:title="@string/menu_about_translate" />
+        </menu>
+    </item>
+    
+    <!-- Queued Downloads -->
+    <item
+        android:id="@+id/menu_downloads"
+        android:title="@string/menu_downloads" />
+    
+    <!-- Followed tag posts -->
+    <item
+        android:id="@+id/menu_following_tags"
+        android:title="@string/menu_following_tags" />
+    
+    <!-- Donate -->
+    <item
+        android:id="@+id/menu_donate"
+        android:title="@string/menu_donate" />
+    
+    <!-- Check for Updates -->
+    <item
+        android:id="@+id/menu_check_updates"
+        android:title="@string/menu_check_updates" />
+    
+    <!-- Settings -->
+    <item
+        android:id="@+id/menu_settings"
+        android:title="@string/menu_settings" />
+        
+</menu>

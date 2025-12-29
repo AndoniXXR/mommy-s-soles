@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Dimensions -->
+    <dimen name="spacing_xs">4dp</dimen>
+    <dimen name="spacing_sm">8dp</dimen>
+    <dimen name="spacing_md">16dp</dimen>
+    <dimen name="spacing_lg">24dp</dimen>
+    <dimen name="spacing_xl">32dp</dimen>
+    
+    <!-- Text Sizes -->
+    <dimen name="text_xs">10sp</dimen>
+    <dimen name="text_sm">12sp</dimen>
+    <dimen name="text_md">14sp</dimen>
+    <dimen name="text_lg">16sp</dimen>
+    <dimen name="text_xl">20sp</dimen>
+    <dimen name="text_title">24sp</dimen>
+    
+    <!-- Grid (from original app) -->
+    <dimen name="grid_item_margin">1dp</dimen>
+    <dimen name="grid_item_info_text_size">11sp</dimen>
+    <dimen name="grid_item_info_padding">5dp</dimen>
+    <integer name="grid_columns">3</integer>
+    <integer name="grid_columns_landscape">5</integer>
+    
+    <!-- Toolbar -->
+    <dimen name="toolbar_height">56dp</dimen>
+    <dimen name="toolbar_elevation">0dp</dimen>
+    <dimen name="main_btn_width">53dp</dimen>
+    
+    <!-- Bottom Navigation -->
+    <dimen name="bottom_nav_height">56dp</dimen>
+    
+    <!-- Card (from original: 5dp corner radius) -->
+    <dimen name="card_corner_radius">5dp</dimen>
+    <dimen name="card_elevation">2dp</dimen>
+    <dimen name="card_margin">7dp</dimen>
+    
+    <!-- Button -->
+    <dimen name="button_height">48dp</dimen>
+    <dimen name="button_corner_radius">24dp</dimen>
+    
+    <!-- Input -->
+    <dimen name="input_height">56dp</dimen>
+    <dimen name="input_width">280dp</dimen>
+    
+    <!-- Post -->
+    <dimen name="post_thumbnail_size">120dp</dimen>
+    <dimen name="post_tag_height">32dp</dimen>
+    
+    <!-- Avatar -->
+    <dimen name="avatar_size">48dp</dimen>
+    <dimen name="avatar_size_large">80dp</dimen>
+</resources>

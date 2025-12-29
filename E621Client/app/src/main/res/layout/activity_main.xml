@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.coordinatorlayout.widget.CoordinatorLayout 
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/coordinatorLayout"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/background_dark">
+
+    <!-- App Bar -->
+    <com.google.android.material.appbar.AppBarLayout
+        android:id="@+id/appBar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/toolbar_background"
+        android:fitsSystemWindows="true"
+        app:elevation="0dp">
+
+        <com.google.android.material.appbar.MaterialToolbar
+            android:id="@+id/toolbar"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:contentInsetStart="2dp"
+            app:contentInsetLeft="2dp"
+            app:layout_scrollFlags="scroll|enterAlways">
+
+            <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <!-- Search View -->
+                <androidx.appcompat.widget.SearchView
+                    android:id="@+id/searchView"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentStart="true"
+                    android:layout_toStartOf="@+id/btnSearch"
+                    android:imeOptions="flagNoExtractUi|flagNoFullscreen|actionSearch"
+                    app:iconifiedByDefault="false"
+                    app:searchIcon="@null"
+                    app:queryHint="@string/main_search_hint" />
+
+                <!-- Search Button -->
+                <ImageButton
+                    android:id="@+id/btnSearch"
+                    android:layout_width="@dimen/main_btn_width"
+                    android:layout_height="@dimen/main_btn_width"
+                    android:layout_toStartOf="@+id/btnMenu"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:contentDescription="@string/cd_search"
+                    android:src="@drawable/ic_search" />
+
+                <!-- Menu Button -->
+                <ImageButton
+                    android:id="@+id/btnMenu"
+                    android:layout_width="@dimen/main_btn_width"
+                    android:layout_height="@dimen/main_btn_width"
+                    android:layout_alignParentEnd="true"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:contentDescription="@string/cd_menu"
+                    android:src="@drawable/ic_menu" />
+
+            </RelativeLayout>
+
+        </com.google.android.material.appbar.MaterialToolbar>
+
+    </com.google.android.material.appbar.AppBarLayout>
+
+    <!-- Main Content -->
+    <LinearLayout
+        android:orientation="vertical"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior">
+
+        <!-- Page Number Indicator -->
+        <TextView
+            android:id="@+id/txtPageNr"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@color/toolbar_background"
+            android:text="@string/main_page_nr"
+            android:textAlignment="center"
+            android:textColor="@color/text_secondary"
+            android:padding="4dp" />
+
+        <!-- Loading Progress -->
+        <ProgressBar
+            android:id="@+id/progressBar"
+            style="@style/Widget.AppCompat.ProgressBar.Horizontal"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:indeterminate="true"
+            android:visibility="gone" />
+
+        <!-- SwipeRefresh with ViewPager2 for swipe gesture pagination -->
+        <!-- CustomSwipeRefreshLayout prevents conflicts with horizontal swipes -->
+        <com.e621.client.ui.views.CustomSwipeRefreshLayout
+            android:id="@+id/swipeRefresh"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1">
+
+            <androidx.viewpager2.widget.ViewPager2
+                android:id="@+id/viewPager"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent" />
+
+        </com.e621.client.ui.views.CustomSwipeRefreshLayout>
+
+    </LinearLayout>
+
+    <!-- Bottom Navigation with Pagination -->
+    <com.google.android.material.bottomnavigation.BottomNavigationView
+        android:id="@+id/bottomNav"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom"
+        android:background="@color/bottom_nav_background"
+        app:itemIconTint="@color/text_primary"
+        app:itemTextColor="@color/text_secondary"
+        app:labelVisibilityMode="labeled"
+        app:menu="@menu/menu_bottom_nav_pagination" />
+
+</androidx.coordinatorlayout.widget.CoordinatorLayout>

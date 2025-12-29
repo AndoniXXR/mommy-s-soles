@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Primary Colors (from original app) -->
+    <color name="primary">#f6f6f6</color>
+    <color name="primary_dark">#e3e3e3</color>
+    <color name="primary_light">#ffffff</color>
+    <color name="colorPrimary">#4980bb</color>
+    <color name="colorPrimaryDark">#3a6899</color>
+    
+    <!-- Accent Colors (from original: colorAccent #4980bb) -->
+    <color name="accent">#4980bb</color>
+    <color name="accent_light">#6a9bce</color>
+    <color name="accent_translucent">#804980bb</color>
+    
+    <!-- Background Colors (from original dark theme) -->
+    <color name="background_dark">#000000</color>
+    <color name="background_surface">#1b1b1b</color>
+    <color name="background_card">#26272b</color>
+    
+    <!-- Text Colors -->
+    <color name="text_primary">#ffffff</color>
+    <color name="text_secondary">#b1b1b1</color>
+    <color name="text_hint">#8d8d8d</color>
+    <color name="text_important">#2499cf</color>
+    
+    <!-- Tag Colors (exact from original app) -->
+    <color name="tag_general">#a4b4c8</color>
+    <color name="tag_artist">#e4a40c</color>
+    <color name="tag_copyright">#d505c4</color>
+    <color name="tag_character">#039f17</color>
+    <color name="tag_species">#e0434f</color>
+    <color name="tag_meta">#ffffff</color>
+    <color name="tag_lore">#228822</color>
+    <color name="tag_invalid">#ff0000</color>
+    
+    <!-- Rating Colors -->
+    <color name="rating_safe">#3f8e42</color>
+    <color name="rating_questionable">#d6c31c</color>
+    <color name="rating_explicit">#ab3335</color>
+    
+    <!-- Parent/Child relationship color (orange like original app) -->
+    <color name="color_parent_child">#FFA500</color>
+    
+    <!-- Score Colors -->
+    <color name="score_positive">#3f8e42</color>
+    <color name="score_negative">#ab3335</color>
+    <color name="score_neutral">#8e8e8e</color>
+    
+    <!-- Favorite Color -->
+    <color name="favorite_color">#e74c3c</color>
+    
+    <!-- UI Colors (from original dark theme) -->
+    <color name="toolbar_background">#080808</color>
+    <color name="bottom_nav_background">#080808</color>
+    <color name="divider">#333b41</color>
+    <color name="ripple">#40ffffff</color>
+    
+    <!-- Status Colors -->
+    <color name="success">#1e8737</color>
+    <color name="warning">#ffa500</color>
+    <color name="error">#F44336</color>
+    <color name="info">#2196F3</color>
+    
+    <!-- Icon Colors -->
+    <color name="icon_tint">#ffffff</color>
+    
+    <!-- Alias Colors -->
+    <color name="accent_color">@color/accent</color>
+    <color name="surface_color">@color/background_surface</color>
+    <color name="white">#FFFFFF</color>
+    
+    <!-- Light Theme Colors -->
+    <color name="light_primary">#1976D2</color>
+    <color name="light_primary_dark">#1565C0</color>
+    <color name="light_background">#FAFAFA</color>
+    <color name="light_surface">#FFFFFF</color>
+    <color name="light_text_primary">#212121</color>
+    <color name="light_text_secondary">#757575</color>
+</resources>

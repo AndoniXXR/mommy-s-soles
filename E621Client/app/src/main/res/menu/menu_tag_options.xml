@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/action_search_tag"
+        android:icon="@drawable/ic_search"
+        android:title="@string/tag_menu_search" />
+    <item
+        android:id="@+id/action_add_to_saved_searches"
+        android:icon="@drawable/ic_bookmark_outline"
+        android:title="@string/tag_menu_add_saved_search" />
+    <item
+        android:id="@+id/action_add_to_blacklist"
+        android:icon="@drawable/ic_block"
+        android:title="@string/tag_menu_add_blacklist" />
+    <item
+        android:id="@+id/action_follow_tag"
+        android:icon="@drawable/ic_notifications"
+        android:title="@string/tag_menu_follow" />
+    <item
+        android:id="@+id/action_unfollow_tag"
+        android:icon="@drawable/ic_notifications_off"
+        android:title="@string/tag_menu_unfollow" />
+    <item
+        android:id="@+id/action_add_to_search"
+        android:icon="@drawable/ic_add"
+        android:title="@string/tag_menu_add_to_search" />
+    <item
+        android:id="@+id/action_exclude_from_search"
+        android:icon="@drawable/ic_remove"
+        android:title="@string/tag_menu_exclude_from_search" />
+    <item
+        android:id="@+id/action_view_wiki"
+        android:icon="@drawable/ic_info"
+        android:title="@string/tag_menu_view_wiki" />
+    <item
+        android:id="@+id/action_copy_tag"
+        android:icon="@drawable/ic_copy"
+        android:title="@string/tag_menu_copy" />
+</menu>

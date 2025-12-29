@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <PreferenceCategory
+        android:title="@string/settings_general"
+        >
+
+        <ListPreference
+            android:key="theme"
+            android:title="@string/settings_theme"
+            android:entries="@array/theme_entries"
+            android:entryValues="@array/theme_values"
+            android:defaultValue="0"
+             />
+
+        <SwitchPreferenceCompat
+            android:key="safe_mode"
+            android:title="@string/settings_safe_mode"
+            android:summary="@string/settings_safe_mode_summary"
+            android:defaultValue="false"
+             />
+
+        <ListPreference
+            android:key="image_quality"
+            android:title="@string/settings_image_quality"
+            android:entries="@array/quality_entries"
+            android:entryValues="@array/quality_values"
+            android:defaultValue="1"
+             />
+
+        <ListPreference
+            android:key="grid_columns"
+            android:title="Grid columns"
+            android:entries="@array/columns_entries"
+            android:entryValues="@array/columns_values"
+            android:defaultValue="3"
+             />
+
+    </PreferenceCategory>
+
+    <PreferenceCategory
+        android:title="@string/settings_cache"
+        >
+
+        <Preference
+            android:key="clear_cache"
+            android:title="@string/settings_clear_cache"
+             />
+
+    </PreferenceCategory>
+
+    <PreferenceCategory
+        android:title="@string/settings_about"
+        >
+
+        <Preference
+            android:key="version"
+            android:title="Version"
+            android:summary="@string/app_version"
+            android:enabled="false"
+             />
+
+    </PreferenceCategory>
+
+</PreferenceScreen>

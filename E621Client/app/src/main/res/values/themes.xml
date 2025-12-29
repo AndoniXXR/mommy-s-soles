@@ -1,0 +1,172 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- Base Theme - Based on original AppThemeDark -->
+    <style name="Theme.E621Client" parent="Theme.Material3.DayNight.NoActionBar">
+        <!-- Window Background -->
+        <item name="android:windowBackground">@color/background_dark</item>
+        
+        <!-- Primary Colors -->
+        <item name="colorPrimary">@color/primary</item>
+        <item name="colorPrimaryDark">@color/primary_dark</item>
+        <item name="colorPrimaryVariant">@color/primary_light</item>
+        
+        <!-- Secondary/Accent Colors -->
+        <item name="colorSecondary">@color/accent</item>
+        <item name="colorSecondaryVariant">@color/accent_light</item>
+        <item name="colorAccent">@color/accent</item>
+        
+        <!-- Background -->
+        <item name="android:colorBackground">@color/background_dark</item>
+        <item name="colorSurface">@color/background_surface</item>
+        <item name="colorSurfaceVariant">@color/background_card</item>
+        
+        <!-- OnSurface Colors (for text/icons on surfaces) -->
+        <item name="colorOnSurface">@color/text_primary</item>
+        <item name="colorOnSurfaceVariant">@color/text_secondary</item>
+        <item name="colorError">@color/rating_explicit</item>
+        
+        <!-- Text Colors -->
+        <item name="android:textColorPrimary">@color/text_primary</item>
+        <item name="android:textColorSecondary">@color/text_secondary</item>
+        <item name="android:textColorHint">@color/text_hint</item>
+        <item name="android:textColorLink">@color/text_important</item>
+        
+        <!-- Status Bar -->
+        <item name="android:statusBarColor">@color/toolbar_background</item>
+        
+        <!-- Disable edge-to-edge / ensure content respects system bars -->
+        <item name="android:windowDrawsSystemBarBackgrounds">true</item>
+        <item name="android:windowLightStatusBar">false</item>
+        
+        <!-- Popup Menu / Overflow Menu Style (dark theme) -->
+        <item name="actionBarPopupTheme">@style/ThemeOverlay.E621Client.PopupMenu</item>
+        <item name="popupMenuStyle">@style/Widget.E621Client.PopupMenu</item>
+        <item name="actionOverflowMenuStyle">@style/Widget.E621Client.PopupMenu.Overflow</item>
+        <item name="textAppearanceLargePopupMenu">@style/TextAppearance.E621Client.PopupMenu</item>
+        <item name="textAppearanceSmallPopupMenu">@style/TextAppearance.E621Client.PopupMenu</item>
+    </style>
+
+    <!-- Splash Theme -->
+    <style name="Theme.E621Client.Splash" parent="Theme.E621Client">
+        <item name="android:windowBackground">@color/background_dark</item>
+    </style>
+
+    <!-- Toolbar Style -->
+    <style name="Widget.E621Client.Toolbar" parent="Widget.Material3.Toolbar">
+        <item name="android:background">@color/toolbar_background</item>
+        <item name="titleTextColor">@color/text_primary</item>
+    </style>
+
+    <!-- Bottom Navigation Style -->
+    <style name="Widget.E621Client.BottomNavigation" parent="Widget.Material3.BottomNavigationView">
+        <item name="android:background">@color/bottom_nav_background</item>
+        <item name="itemTextColor">@color/text_secondary</item>
+        <item name="itemIconTint">@color/text_secondary</item>
+    </style>
+
+    <!-- Card Style -->
+    <style name="Widget.E621Client.Card" parent="Widget.Material3.CardView.Elevated">
+        <item name="cardBackgroundColor">@color/background_card</item>
+        <item name="cardCornerRadius">@dimen/card_corner_radius</item>
+        <item name="cardElevation">@dimen/card_elevation</item>
+    </style>
+
+    <!-- Button Style -->
+    <style name="Widget.E621Client.Button" parent="Widget.Material3.Button">
+        <item name="android:textColor">@color/text_primary</item>
+        <item name="backgroundTint">@color/accent</item>
+        <item name="cornerRadius">@dimen/button_corner_radius</item>
+    </style>
+
+    <!-- Text Input Style -->
+    <style name="Widget.E621Client.TextInputLayout" parent="Widget.Material3.TextInputLayout.OutlinedBox">
+        <item name="boxStrokeColor">@color/accent</item>
+        <item name="hintTextColor">@color/text_hint</item>
+    </style>
+
+    <!-- Base Tag Style -->
+    <style name="Tag" parent="">
+        <item name="android:textSize">14sp</item>
+        <item name="android:padding">4dp</item>
+    </style>
+    
+    <!-- Tag Styles -->
+    <style name="Tag.General" parent="Tag">
+        <item name="android:textColor">@color/tag_general</item>
+    </style>
+    <style name="Tag.Artist" parent="Tag">
+        <item name="android:textColor">@color/tag_artist</item>
+    </style>
+    <style name="Tag.Copyright" parent="Tag">
+        <item name="android:textColor">@color/tag_copyright</item>
+    </style>
+    <style name="Tag.Character" parent="Tag">
+        <item name="android:textColor">@color/tag_character</item>
+    </style>
+    <style name="Tag.Species" parent="Tag">
+        <item name="android:textColor">@color/tag_species</item>
+    </style>
+    <style name="Tag.Meta" parent="Tag">
+        <item name="android:textColor">@color/tag_meta</item>
+    </style>
+
+    <!-- Circle Image Style -->
+    <style name="CircleImage" parent="">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">50%</item>
+    </style>
+
+    <!-- Dark Alert Dialog Style -->
+    <style name="Theme.E621Client.AlertDialog" parent="ThemeOverlay.Material3.MaterialAlertDialog">
+        <item name="android:background">@color/background_surface</item>
+        <item name="android:colorBackground">@color/background_surface</item>
+        <item name="colorSurface">@color/background_surface</item>
+        <item name="colorOnSurface">@color/text_primary</item>
+        <item name="colorOnSurfaceVariant">@color/text_secondary</item>
+        <item name="colorPrimary">@color/accent</item>
+        <item name="buttonBarButtonStyle">@style/Widget.E621Client.DialogButton</item>
+    </style>
+    
+    <!-- Dialog Button Style -->
+    <style name="Widget.E621Client.DialogButton" parent="Widget.Material3.Button.TextButton.Dialog">
+        <item name="android:textColor">@color/accent</item>
+    </style>
+
+    <!-- Bottom Sheet Dialog Theme -->
+    <style name="BottomSheetDialogTheme" parent="Theme.Design.Light.BottomSheetDialog">
+        <item name="bottomSheetStyle">@style/BottomSheetStyle</item>
+        <item name="android:windowIsFloating">false</item>
+        <item name="android:windowSoftInputMode">adjustResize</item>
+    </style>
+    
+    <style name="BottomSheetStyle" parent="Widget.Design.BottomSheet.Modal">
+        <item name="android:background">@drawable/bottom_sheet_background</item>
+    </style>
+
+    <!-- Popup Menu Theme Overlay (for dark theme compatibility) -->
+    <style name="ThemeOverlay.E621Client.PopupMenu" parent="ThemeOverlay.Material3.Dark">
+        <item name="android:colorBackground">@color/background_card</item>
+        <item name="colorSurface">@color/background_card</item>
+        <item name="colorOnSurface">@color/text_primary</item>
+        <item name="android:textColorPrimary">@color/text_primary</item>
+        <item name="android:textColorSecondary">@color/text_secondary</item>
+    </style>
+    
+    <!-- Popup Menu Style -->
+    <style name="Widget.E621Client.PopupMenu" parent="Widget.Material3.PopupMenu">
+        <item name="android:popupBackground">@drawable/popup_menu_background</item>
+    </style>
+    
+    <!-- Overflow Menu Style -->
+    <style name="Widget.E621Client.PopupMenu.Overflow" parent="Widget.Material3.PopupMenu.Overflow">
+        <item name="android:popupBackground">@drawable/popup_menu_background</item>
+    </style>
+    
+    <!-- Popup Menu Text Appearance -->
+    <style name="TextAppearance.E621Client.PopupMenu" parent="TextAppearance.Material3.BodyLarge">
+        <item name="android:textColor">@color/text_primary</item>
+        <item name="android:textSize">16sp</item>
+    </style>
+
+</resources>

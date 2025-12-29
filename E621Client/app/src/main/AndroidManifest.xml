@@ -1,0 +1,211 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <!-- Network permissions -->
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    
+    <!-- Storage for downloads -->
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"
+        android:maxSdkVersion="28"
+        tools:ignore="ScopedStorage" />
+    
+    <!-- Notifications -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    
+    <!-- Vibration for haptic feedback -->
+    <uses-permission android:name="android.permission.VIBRATE" />
+    
+    <!-- Request Install Packages for auto-update -->
+    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
+
+    <application
+        android:name=".E621Application"
+        android:allowBackup="true"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.E621Client"
+        android:usesCleartextTraffic="false"
+        android:networkSecurityConfig="@xml/network_security_config"
+        tools:targetApi="35">
+
+        <!-- Launcher Activity -->
+        <activity
+            android:name=".ui.LauncherActivity"
+            android:exported="true"
+            android:theme="@style/Theme.E621Client.Splash">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <!-- PIN Code Activity -->
+        <activity
+            android:name=".ui.PinCodeActivity"
+            android:exported="false"
+            android:theme="@style/Theme.E621Client" />
+
+        <!-- Main Activity -->
+        <activity
+            android:name=".ui.MainActivity"
+            android:exported="true"
+            android:windowSoftInputMode="adjustPan|stateAlwaysHidden"
+            android:configChanges="screenSize|uiMode|screenLayout|orientation">
+            
+            <!-- Deep links for e621.net -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data
+                    android:scheme="https"
+                    android:host="e621.net"
+                    android:pathPrefix="/posts" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data
+                    android:scheme="https"
+                    android:host="e926.net"
+                    android:pathPrefix="/posts" />
+            </intent-filter>
+        </activity>
+
+        <!-- Login Activity -->
+        <activity
+            android:name=".ui.auth.LoginActivity"
+            android:configChanges="screenSize|screenLayout|orientation" />
+
+        <!-- Post Activity -->
+        <activity
+            android:name=".ui.post.PostActivity"
+            android:configChanges="screenSize|uiMode|screenLayout|orientation" />
+
+        <!-- Edit Post Activity -->
+        <activity
+            android:name=".ui.post.EditPostActivity"
+            android:configChanges="screenSize|uiMode|screenLayout|orientation" />
+
+        <!-- Fullscreen Video Activity -->
+        <activity
+            android:name=".ui.post.FullscreenVideoActivity"
+            android:configChanges="screenSize|uiMode|screenLayout|orientation"
+            android:theme="@style/Theme.AppCompat.NoActionBar" />
+
+        <!-- Fullscreen Image Activity -->
+        <activity
+            android:name=".ui.post.FullscreenImageActivity"
+            android:configChanges="screenSize|uiMode|screenLayout|orientation"
+            android:theme="@style/Theme.AppCompat.NoActionBar" />
+
+        <!-- Settings Activity -->
+        <activity
+            android:name=".ui.settings.SettingsActivity"
+            android:configChanges="screenSize|uiMode|screenLayout|orientation" />
+
+        <!-- Blacklist Activity -->
+        <activity
+            android:name=".ui.settings.BlacklistActivity"
+            android:configChanges="screenSize|uiMode|screenLayout|orientation" />
+
+        <!-- Following Log Activity -->
+        <activity
+            android:name=".ui.settings.FollowingLogActivity"
+            android:configChanges="screenSize|uiMode|screenLayout|orientation" />
+
+        <!-- Profile Activity -->
+        <activity
+            android:name=".ui.profile.ProfileActivity"
+            android:configChanges="screenSize|uiMode|screenLayout|orientation" />
+
+        <!-- Search Activity -->
+        <activity
+            android:name=".ui.search.SearchActivity"
+            android:configChanges="screenSize|uiMode|screenLayout|orientation" />
+
+        <!-- Pools Activity -->
+        <activity
+            android:name=".ui.pools.PoolsActivity"
+            android:configChanges="screenSize|uiMode|screenLayout|orientation" />
+
+        <!-- About Activity -->
+        <activity
+            android:name=".ui.about.AboutActivity"
+            android:configChanges="screenSize|uiMode|screenLayout|orientation" />
+
+        <!-- Popular Activity -->
+        <activity
+            android:name=".ui.popular.PopularActivity"
+            android:configChanges="screenSize|uiMode|screenLayout|orientation" />
+
+        <!-- Comments Activity -->
+        <activity
+            android:name=".ui.comments.CommentsActivity"
+            android:configChanges="screenSize|uiMode|screenLayout|orientation" />
+
+        <!-- Dmail Activity -->
+        <activity
+            android:name=".ui.dmail.DmailActivity"
+            android:configChanges="screenSize|uiMode|screenLayout|orientation" />
+
+        <!-- Sets Activity -->
+        <activity
+            android:name=".ui.sets.SetsActivity"
+            android:configChanges="screenSize|uiMode|screenLayout|orientation" />
+
+        <!-- Saved Searches Activity -->
+        <activity
+            android:name=".ui.saved.SavedSearchesActivity"
+            android:configChanges="screenSize|uiMode|screenLayout|orientation" />
+
+        <!-- Browse Tags Activity -->
+        <activity
+            android:name=".ui.browse.BrowseTagsActivity"
+            android:configChanges="screenSize|uiMode|screenLayout|orientation" />
+
+        <!-- Browse Pools Activity -->
+        <activity
+            android:name=".ui.browse.BrowsePoolsActivity"
+            android:configChanges="screenSize|uiMode|screenLayout|orientation" />
+
+        <!-- Browse Users Activity -->
+        <activity
+            android:name=".ui.browse.BrowseUsersActivity"
+            android:configChanges="screenSize|uiMode|screenLayout|orientation" />
+
+        <!-- Wiki Activity -->
+        <activity
+            android:name=".ui.wiki.WikiActivity"
+            android:configChanges="screenSize|uiMode|screenLayout|orientation" />
+
+        <!-- Pool View Activity -->
+        <activity
+            android:name=".ui.pools.PoolViewActivity"
+            android:configChanges="screenSize|uiMode|screenLayout|orientation" />
+
+        <!-- File Provider for sharing -->
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.fileprovider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/file_paths" />
+        </provider>
+
+        <!-- Search Suggestions Provider -->
+        <provider
+            android:name=".data.search.SearchSuggestionsProvider"
+            android:authorities="com.e621.client.searchprovider"
+            android:exported="false" />
+
+    </application>
+
+</manifest>

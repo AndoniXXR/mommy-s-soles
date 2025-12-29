@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <!-- General Settings -->
+    <Preference
+        android:key="menu_general"
+        android:title="@string/pref_category_general"
+        android:summary="@string/pref_general_summary"
+        android:icon="@drawable/ic_settings_gear"
+        android:fragment="com.e621.client.ui.settings.SettingsActivity$GeneralSettingsFragment" />
+
+    <!-- Following Tags -->
+    <Preference
+        android:key="menu_follow_tags"
+        android:title="@string/pref_category_following"
+        android:summary="@string/pref_following_summary"
+        android:icon="@drawable/ic_notifications_active"
+        android:fragment="com.e621.client.ui.settings.SettingsActivity$FollowingSettingsFragment" />
+
+    <!-- Searching -->
+    <Preference
+        android:key="menu_search_and_tags"
+        android:title="@string/pref_category_searching"
+        android:summary="@string/pref_searching_summary"
+        android:icon="@drawable/ic_search"
+        android:fragment="com.e621.client.ui.settings.SettingsActivity$SearchingSettingsFragment" />
+
+    <!-- Grid View -->
+    <Preference
+        android:key="menu_grid_view"
+        android:title="@string/pref_category_grid"
+        android:summary="@string/pref_grid_view_summary"
+        android:icon="@drawable/ic_grid"
+        android:fragment="com.e621.client.ui.settings.SettingsActivity$GridSettingsFragment" />
+
+    <!-- Post View -->
+    <Preference
+        android:key="menu_post_view"
+        android:title="@string/pref_category_post"
+        android:summary="@string/pref_post_view_summary"
+        android:icon="@drawable/ic_eye"
+        android:fragment="com.e621.client.ui.settings.SettingsActivity$PostSettingsFragment" />
+
+    <!-- Storage & Downloads -->
+    <Preference
+        android:key="menu_storage_and_downloads"
+        android:title="@string/pref_category_storage"
+        android:summary="@string/pref_storage_summary"
+        android:icon="@drawable/ic_download"
+        android:fragment="com.e621.client.ui.settings.SettingsActivity$StorageSettingsFragment" />
+
+    <!-- Export/Import Category -->
+    <PreferenceCategory android:title="@string/pref_category_export">
+        
+        <Preference
+            android:key="export_export"
+            android:title="@string/pref_export_settings_title"
+            android:summary="@string/pref_export_settings_summary"
+            android:icon="@drawable/ic_cloud_upload" />
+
+        <Preference
+            android:key="export_import"
+            android:title="@string/pref_import_settings_title"
+            android:summary="@string/pref_import_settings_summary"
+            android:icon="@drawable/ic_cloud_download" />
+
+    </PreferenceCategory>
+
+    <!-- Privacy Category -->
+    <PreferenceCategory android:title="@string/pref_category_privacy">
+
+        <SwitchPreferenceCompat
+            android:key="privacy_crash_reports"
+            android:title="@string/pref_crash_reports_title"
+            android:summary="@string/pref_crash_reports_summary"
+            android:icon="@drawable/ic_bug_report"
+            android:defaultValue="true" />
+
+        <SwitchPreferenceCompat
+            android:key="privacy_analytics"
+            android:title="@string/pref_analytics_title"
+            android:summary="@string/pref_analytics_summary"
+            android:icon="@drawable/ic_analytics"
+            android:defaultValue="true" />
+
+    </PreferenceCategory>
+
+    <!-- Network Category -->
+    <PreferenceCategory android:title="@string/pref_category_network">
+
+        <SwitchPreferenceCompat
+            android:key="proxy"
+            android:title="@string/pref_proxy_enabled_title"
+            android:summary="@string/pref_proxy_enabled_summary"
+            android:icon="@drawable/ic_vpn"
+            android:defaultValue="false" />
+
+        <Preference
+            android:key="cloudflare"
+            android:title="@string/cloudflare_reload_title"
+            android:summary="@string/cloudflare_reload_summary"
+            android:icon="@drawable/ic_refresh" />
+
+    </PreferenceCategory>
+
+    <!-- About Category -->
+    <PreferenceCategory android:title="@string/pref_category_about">
+
+        <Preference
+            android:key="version"
+            android:title="@string/pref_version_title"
+            android:summary="@string/pref_version_summary"
+            android:icon="@drawable/ic_info"
+            android:enabled="false" />
+
+    </PreferenceCategory>
+
+</PreferenceScreen>

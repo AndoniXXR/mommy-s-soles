@@ -1,0 +1,28 @@
+# Exclude specific folders and files requested
+.git_backup/
+jadx/
+T2_decompiled/
+build_log.txt
+documentacion_api_e621.md
+investigacion_apk_decompilers.md
+T2_165_beta-4.15.2_web_release.apk
+jadx.zip
+gradle.zip
+*.zip
+
+# Exclude build artifacts and caches
+**/.gradle/
+**/build/
+*.iml
+.idea/
+.vscode/
+*.DS_Store
+
+# Exclude all APKs by default, but allow the specific one
+*.apk
+!mommy-s-soles-v1.0.0.apk
+!E621Client/mommy-s-soles-v1.0.0.apk
+
+# Allow the specific image
+!soles.png
+!E621Client/soles.png

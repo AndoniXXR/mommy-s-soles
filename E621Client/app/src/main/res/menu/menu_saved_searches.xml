@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+    
+    <!-- Add button in toolbar -->
+    <item
+        android:id="@+id/action_add"
+        android:icon="@drawable/ic_add"
+        android:title="@string/add_saved_search"
+        app:showAsAction="always" />
+    
+    <!-- Overflow menu -->
+    <item
+        android:id="@+id/action_clear"
+        android:title="@string/saved_menu_clear" />
+    
+    <item android:title="@string/saved_menu_order_by">
+        <menu>
+            <item
+                android:id="@+id/order_by_date_used"
+                android:title="@string/saved_menu_order_by_date_used" />
+            <item
+                android:id="@+id/order_by_date_created"
+                android:title="@string/saved_menu_order_by_date_created" />
+            <item
+                android:id="@+id/order_by_name"
+                android:title="@string/saved_menu_order_by_name" />
+            <item
+                android:id="@+id/order_by_tags"
+                android:title="@string/saved_menu_order_by_tags" />
+        </menu>
+    </item>
+    
+    <item
+        android:id="@+id/order_tags_alphabetically"
+        android:title="@string/saved_menu_order_tags_alphabetically" />
+    
+    <item
+        android:id="@+id/action_export"
+        android:title="@string/saved_menu_export" />
+    
+    <item
+        android:id="@+id/action_import"
+        android:title="@string/saved_menu_import" />
+    
+    <item
+        android:id="@+id/action_settings"
+        android:title="@string/settings" />
+    
+</menu>

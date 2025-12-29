@@ -1,0 +1,411 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout 
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:padding="4dp">
+
+    <!-- Tags Section Header -->
+    <LinearLayout
+        android:id="@+id/layoutTagsHeader"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:padding="8dp"
+        android:clickable="true"
+        android:focusable="true"
+        android:background="?attr/selectableItemBackground"
+        app:layout_constraintEnd_toStartOf="@+id/layoutDetailsHeader"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <TextView
+            android:id="@+id/txtTagsTitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/tags"
+            android:textStyle="bold"
+            android:textSize="14sp"
+            android:textColor="@color/text_primary" />
+
+        <ImageView
+            android:id="@+id/imgTagsExpand"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/ic_expand_less"
+            app:tint="@color/text_primary" />
+
+    </LinearLayout>
+
+    <!-- Tags List Container -->
+    <LinearLayout
+        android:id="@+id/layoutTags"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:paddingStart="8dp"
+        android:paddingEnd="8dp"
+        android:animateLayoutChanges="false"
+        app:layout_constraintEnd_toEndOf="@+id/layoutTagsHeader"
+        app:layout_constraintStart_toStartOf="@+id/layoutTagsHeader"
+        app:layout_constraintTop_toBottomOf="@+id/layoutTagsHeader">
+
+        <!-- Artist Tags -->
+        <LinearLayout
+            android:id="@+id/layoutTagsArtist"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:visibility="gone">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/tag_artist"
+                android:textStyle="bold"
+                android:textSize="13sp"
+                android:textColor="@color/tag_artist"
+                android:layout_marginTop="4dp" />
+
+            <com.google.android.flexbox.FlexboxLayout
+                android:id="@+id/chipGroupArtist"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:flexWrap="wrap"
+                app:alignItems="flex_start" />
+
+        </LinearLayout>
+
+        <!-- Copyright Tags -->
+        <LinearLayout
+            android:id="@+id/layoutTagsCopyright"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:visibility="gone">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/tag_copyright"
+                android:textStyle="bold"
+                android:textSize="13sp"
+                android:textColor="@color/tag_copyright"
+                android:layout_marginTop="4dp" />
+
+            <com.google.android.flexbox.FlexboxLayout
+                android:id="@+id/chipGroupCopyright"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:flexWrap="wrap"
+                app:alignItems="flex_start" />
+
+        </LinearLayout>
+
+        <!-- Character Tags -->
+        <LinearLayout
+            android:id="@+id/layoutTagsCharacter"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:visibility="gone">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/tag_character"
+                android:textStyle="bold"
+                android:textSize="13sp"
+                android:textColor="@color/tag_character"
+                android:layout_marginTop="4dp" />
+
+            <com.google.android.flexbox.FlexboxLayout
+                android:id="@+id/chipGroupCharacter"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:flexWrap="wrap"
+                app:alignItems="flex_start" />
+
+        </LinearLayout>
+
+        <!-- Species Tags -->
+        <LinearLayout
+            android:id="@+id/layoutTagsSpecies"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:visibility="gone">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/tag_species"
+                android:textStyle="bold"
+                android:textSize="13sp"
+                android:textColor="@color/tag_species"
+                android:layout_marginTop="4dp" />
+
+            <com.google.android.flexbox.FlexboxLayout
+                android:id="@+id/chipGroupSpecies"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:flexWrap="wrap"
+                app:alignItems="flex_start" />
+
+        </LinearLayout>
+
+        <!-- General Tags -->
+        <LinearLayout
+            android:id="@+id/layoutTagsGeneral"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:visibility="gone">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/tag_general"
+                android:textStyle="bold"
+                android:textSize="13sp"
+                android:textColor="@color/tag_general"
+                android:layout_marginTop="4dp" />
+
+            <com.google.android.flexbox.FlexboxLayout
+                android:id="@+id/chipGroupGeneral"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:flexWrap="wrap"
+                app:alignItems="flex_start" />
+
+        </LinearLayout>
+
+        <!-- Meta Tags -->
+        <LinearLayout
+            android:id="@+id/layoutTagsMeta"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:visibility="gone">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/tag_meta"
+                android:textStyle="bold"
+                android:textSize="13sp"
+                android:textColor="@color/tag_meta"
+                android:layout_marginTop="4dp" />
+
+            <com.google.android.flexbox.FlexboxLayout
+                android:id="@+id/chipGroupMeta"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:flexWrap="wrap"
+                app:alignItems="flex_start" />
+
+        </LinearLayout>
+
+        <!-- Lore Tags -->
+        <LinearLayout
+            android:id="@+id/layoutTagsLore"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:visibility="gone">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/tag_lore"
+                android:textStyle="bold"
+                android:textSize="13sp"
+                android:textColor="@color/tag_lore"
+                android:layout_marginTop="4dp" />
+
+            <com.google.android.flexbox.FlexboxLayout
+                android:id="@+id/chipGroupLore"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:flexWrap="wrap"
+                app:alignItems="flex_start" />
+
+        </LinearLayout>
+
+        <!-- Invalid Tags -->
+        <LinearLayout
+            android:id="@+id/layoutTagsInvalid"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:visibility="gone">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/tag_invalid"
+                android:textStyle="bold"
+                android:textSize="13sp"
+                android:textColor="@color/tag_invalid"
+                android:layout_marginTop="4dp" />
+
+            <com.google.android.flexbox.FlexboxLayout
+                android:id="@+id/chipGroupInvalid"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:flexWrap="wrap"
+                app:alignItems="flex_start" />
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+    <!-- Details Section Header -->
+    <LinearLayout
+        android:id="@+id/layoutDetailsHeader"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:padding="8dp"
+        android:gravity="end"
+        android:clickable="true"
+        android:focusable="true"
+        android:background="?attr/selectableItemBackground"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toEndOf="@+id/layoutTagsHeader"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <TextView
+            android:id="@+id/txtDetailsTitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/post_details"
+            android:textStyle="bold"
+            android:textSize="14sp"
+            android:textColor="@color/text_primary" />
+
+        <ImageView
+            android:id="@+id/imgDetailsExpand"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/ic_expand_less"
+            app:tint="@color/text_primary" />
+
+    </LinearLayout>
+
+    <!-- Details Content -->
+    <LinearLayout
+        android:id="@+id/layoutDetails"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:paddingStart="8dp"
+        android:paddingEnd="8dp"
+        android:animateLayoutChanges="false"
+        app:layout_constraintEnd_toEndOf="@+id/layoutDetailsHeader"
+        app:layout_constraintStart_toStartOf="@+id/layoutDetailsHeader"
+        app:layout_constraintTop_toBottomOf="@+id/layoutDetailsHeader">
+
+        <!-- Uploader -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginTop="4dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/post_uploader"
+                android:textSize="12sp"
+                android:textColor="@color/text_secondary" />
+
+            <TextView
+                android:id="@+id/txtUploader"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textSize="12sp"
+                android:textColor="@color/accent"
+                android:layout_marginStart="4dp" />
+
+        </LinearLayout>
+
+        <!-- Approver -->
+        <LinearLayout
+            android:id="@+id/layoutApprover"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginTop="2dp"
+            android:visibility="gone">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/post_approver"
+                android:textSize="12sp"
+                android:textColor="@color/text_secondary" />
+
+            <TextView
+                android:id="@+id/txtApprover"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textSize="12sp"
+                android:textColor="@color/accent"
+                android:layout_marginStart="4dp" />
+
+        </LinearLayout>
+
+        <!-- Status -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginTop="2dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/post_status"
+                android:textSize="12sp"
+                android:textColor="@color/text_secondary" />
+
+            <TextView
+                android:id="@+id/txtStatus"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textSize="12sp"
+                android:textColor="@color/text_primary"
+                android:layout_marginStart="4dp" />
+
+        </LinearLayout>
+
+        <!-- Rating -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginTop="2dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/post_rating_label"
+                android:textSize="12sp"
+                android:textColor="@color/text_secondary" />
+
+            <TextView
+                android:id="@+id/txtRatingFull"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textSize="12sp"
+                android:layout_marginStart="4dp" />
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>
