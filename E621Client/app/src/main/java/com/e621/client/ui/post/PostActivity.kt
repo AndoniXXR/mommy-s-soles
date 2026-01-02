@@ -1859,18 +1859,23 @@ class PostActivity : AppCompatActivity(), PostViewPagerAdapter.PostInteractionLi
         startActivity(intent)
     }
     
-    override fun onChildrenClicked(postId: Int) {
-        // Search for children: parent:postId - stay in PostActivity flow
+    override fun onChildrenClicked(parentId: Int, clickedChildId: Int) {
+        // Search for children: parent:parentId - stay in PostActivity flow
         lifecycleScope.launch {
             try {
-                val response = api.posts.list(tags = "parent:$postId", page = 1, limit = 75)
+                val response = api.posts.list(tags = "parent:$parentId", page = 1, limit = 75)
                 if (response.isSuccessful) {
                     val childPosts = response.body()?.posts
                     if (!childPosts.isNullOrEmpty()) {
                         // Open new PostActivity with children posts
                         POSTS_TO_SHOW = childPosts
+                        
+                        // Find the index of the clicked child
+                        val targetIndex = childPosts.indexOfFirst { it.id == clickedChildId }
+                        val startPosition = if (targetIndex != -1) targetIndex else 0
+                        
                         val intent = Intent(this@PostActivity, PostActivity::class.java)
-                        intent.putExtra(EXTRA_POSITION, 0)
+                        intent.putExtra(EXTRA_POSITION, startPosition)
                         startActivity(intent)
                     } else {
                         Toast.makeText(this@PostActivity, "No children found", Toast.LENGTH_SHORT).show()

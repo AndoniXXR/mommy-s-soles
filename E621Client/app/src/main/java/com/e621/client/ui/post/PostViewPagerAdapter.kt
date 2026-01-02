@@ -8,6 +8,11 @@ import android.view.LayoutInflater
 import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
+import android.text.SpannableString
+import android.text.Spanned
+import android.text.TextPaint
+import android.text.method.LinkMovementMethod
+import android.text.style.ClickableSpan
 import android.widget.Button
 import android.widget.FrameLayout
 import android.widget.ImageButton
@@ -71,7 +76,7 @@ class PostViewPagerAdapter(
         fun onArtistClicked(artist: String)
         fun onUserClicked(username: String)
         fun onParentClicked(parentId: Int)
-        fun onChildrenClicked(postId: Int)
+        fun onChildrenClicked(parentId: Int, clickedChildId: Int)
         fun onPoolClicked(poolId: Int)
         fun onSourceClicked(source: String)
         fun onImageTapped()
@@ -733,12 +738,43 @@ class PostViewPagerAdapter(
                 // Children: "Hijo: ID" or "Hijos: ID1, ID2, ..."
                 if (hasChildren && childrenList.isNotEmpty()) {
                     txtChildren.visibility = View.VISIBLE
-                    val childrenIds = childrenList.joinToString(", ")
-                    val pluralRes = if (childrenList.size == 1) R.string.post_child else R.string.post_children
-                    txtChildren.text = itemView.context.getString(pluralRes, childrenIds)
-                    txtChildren.setOnClickListener {
-                        onPostInteraction.onChildrenClicked(post.id)
+                    
+                    val prefixRes = if (childrenList.size == 1) R.string.post_child else R.string.post_children
+                    // We need to construct the string manually to make links clickable
+                    // String format in xml is likely "Hijos: %1$s"
+                    // We will extract "Hijos: " part and append clickable IDs
+                    
+                    val fullTextDummy = itemView.context.getString(prefixRes, "")
+                    val prefix = fullTextDummy.replace("  ", " ").trim() // Simple heuristic or just hardcode "Hijos: "
+                    
+                    // Better approach: Build the SpannableString
+                    val sb = android.text.SpannableStringBuilder()
+                    sb.append(if (childrenList.size == 1) "Hijo: " else "Hijos: ")
+                    
+                    childrenList.forEachIndexed { index, childId ->
+                        if (index > 0) sb.append(", ")
+                        
+                        val start = sb.length
+                        sb.append(childId.toString())
+                        val end = sb.length
+                        
+                        sb.setSpan(object : ClickableSpan() {
+                            override fun onClick(widget: View) {
+                                onPostInteraction.onChildrenClicked(post.id, childId)
+                            }
+                            
+                            override fun updateDrawState(ds: TextPaint) {
+                                super.updateDrawState(ds)
+                                ds.isUnderlineText = true
+                                ds.color = itemView.context.getColor(R.color.accent)
+                            }
+                        }, start, end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
                     }
+                    
+                    txtChildren.text = sb
+                    txtChildren.movementMethod = LinkMovementMethod.getInstance()
+                    // Remove the general click listener since we have individual links
+                    txtChildren.setOnClickListener(null) 
                 } else {
                     txtChildren.visibility = View.GONE
                 }
