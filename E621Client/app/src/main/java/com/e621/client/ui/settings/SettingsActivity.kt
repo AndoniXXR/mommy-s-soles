@@ -1023,8 +1023,22 @@ class SettingsActivity : AppCompatActivity(),
                 }
                 
                 setOnPreferenceChangeListener { _, newValue ->
-                    prefs.biometricsEnabled = newValue as Boolean
-                    true
+                    val enable = newValue as Boolean
+                    if (enable && !prefs.isPinSet()) {
+                        // Require PIN setup first
+                        MaterialAlertDialogBuilder(requireContext())
+                            .setTitle(R.string.pin_required_title)
+                            .setMessage(R.string.pin_required_message)
+                            .setPositiveButton(R.string.setup_pin) { _, _ ->
+                                showPinSetupDialog()
+                            }
+                            .setNegativeButton(R.string.cancel, null)
+                            .show()
+                        false
+                    } else {
+                        prefs.biometricsEnabled = enable
+                        true
+                    }
                 }
             }
             

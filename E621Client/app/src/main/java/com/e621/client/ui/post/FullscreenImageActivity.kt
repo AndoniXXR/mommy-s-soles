@@ -65,6 +65,8 @@ class FullscreenImageActivity : AppCompatActivity() {
         
         Glide.with(this)
             .load(url)
+            .override(com.bumptech.glide.request.target.Target.SIZE_ORIGINAL)
+            .format(com.bumptech.glide.load.DecodeFormat.PREFER_ARGB_8888)
             .into(photoView)
     }
     
@@ -85,8 +87,9 @@ class FullscreenImageActivity : AppCompatActivity() {
         
         photoView.setOnDoubleTapListener(object : GestureDetector.OnDoubleTapListener {
             override fun onDoubleTap(e: MotionEvent): Boolean {
-                // Let PhotoView handle zoom on double tap
-                return false
+                // Double tap to exit fullscreen
+                finish()
+                return true
             }
             
             override fun onDoubleTapEvent(e: MotionEvent): Boolean {

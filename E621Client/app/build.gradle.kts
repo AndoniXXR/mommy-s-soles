@@ -84,6 +84,7 @@ dependencies {
     
     // Image Loading
     implementation(libs.glide)
+    implementation(libs.glide.integration)
     kapt(libs.glide.compiler)
     implementation(libs.photoview)
     

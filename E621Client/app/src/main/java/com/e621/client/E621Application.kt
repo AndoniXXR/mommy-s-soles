@@ -1,6 +1,7 @@
 package com.e621.client
 
 import android.app.Application
+import android.content.Intent
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.work.Constraints
 import androidx.work.ExistingPeriodicWorkPolicy
@@ -9,6 +10,7 @@ import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import com.e621.client.data.api.E621Api
 import com.e621.client.data.preferences.UserPreferences
+import com.e621.client.service.TagMonitoringService
 import com.e621.client.worker.FollowedTagsWorker
 import java.util.concurrent.TimeUnit
 
@@ -27,6 +29,9 @@ class E621Application : Application() {
     lateinit var api: E621Api
         private set
 
+    // Global scope for background operations that should survive activity lifecycle
+    val applicationScope = kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.SupervisorJob() + kotlinx.coroutines.Dispatchers.Main)
+
     override fun onCreate() {
         super.onCreate()
         instance = this
@@ -40,8 +45,8 @@ class E621Application : Application() {
         // Initialize API
         api = E621Api.create(userPreferences)
         
-        // Setup followed tags worker
-        setupFollowedTagsWorker()
+        // Setup followed tags monitoring (Worker or Service)
+        setupTagMonitoring()
         
         // Check cache size and clear if needed
         checkAndClearCache()
@@ -59,47 +64,72 @@ class E621Application : Application() {
     }
     
     /**
-     * Configures the periodic work for checking followed tags for new posts
+     * Configures the background monitoring for followed tags (Worker or Service)
      */
-    private fun setupFollowedTagsWorker() {
+    private fun setupTagMonitoring() {
+        val workManager = WorkManager.getInstance(this)
+        val serviceIntent = Intent(this, TagMonitoringService::class.java)
+
         if (!userPreferences.followedTagsNotificationsEnabled) {
-            // Cancel any existing work if notifications are disabled
-            WorkManager.getInstance(this).cancelUniqueWork(FollowedTagsWorker.WORK_NAME)
+            // Cancel everything if disabled
+            workManager.cancelUniqueWork(FollowedTagsWorker.WORK_NAME)
+            stopService(serviceIntent)
             return
         }
-        
-        // Set network constraint based on onlyWifi preference
-        val networkType = if (userPreferences.followingOnlyWifi) {
-            NetworkType.UNMETERED // WiFi only
-        } else {
-            NetworkType.CONNECTED // Any network
-        }
-        
-        val constraints = Constraints.Builder()
-            .setRequiredNetworkType(networkType)
-            .build()
-        
+
         // Interval is stored in minutes
-        val intervalMinutes = userPreferences.followedTagsCheckInterval.toLong().coerceAtLeast(15)
-        
-        val workRequest = PeriodicWorkRequestBuilder<FollowedTagsWorker>(
-            intervalMinutes, TimeUnit.MINUTES
-        )
-            .setConstraints(constraints)
-            .build()
-        
-        WorkManager.getInstance(this).enqueueUniquePeriodicWork(
-            FollowedTagsWorker.WORK_NAME,
-            ExistingPeriodicWorkPolicy.UPDATE,
-            workRequest
-        )
+        val intervalMinutes = userPreferences.followedTagsCheckInterval.toLong()
+
+        if (intervalMinutes == 1L) {
+            // INSTANT MODE: Use Foreground Service
+            // 1. Cancel Worker
+            workManager.cancelUniqueWork(FollowedTagsWorker.WORK_NAME)
+            
+            // 2. Start Service
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+                startForegroundService(serviceIntent)
+            } else {
+                startService(serviceIntent)
+            }
+        } else {
+            // PERIODIC MODE: Use WorkManager
+            // 1. Stop Service
+            stopService(serviceIntent)
+
+            // 2. Schedule Worker
+            // Set network constraint based on onlyWifi preference
+            val networkType = if (userPreferences.followingOnlyWifi) {
+                NetworkType.UNMETERED // WiFi only
+            } else {
+                NetworkType.CONNECTED // Any network
+            }
+            
+            val constraints = Constraints.Builder()
+                .setRequiredNetworkType(networkType)
+                .build()
+            
+            // Ensure minimum 15 minutes for WorkManager
+            val safeInterval = intervalMinutes.coerceAtLeast(15)
+            
+            val workRequest = PeriodicWorkRequestBuilder<FollowedTagsWorker>(
+                safeInterval, TimeUnit.MINUTES
+            )
+                .setConstraints(constraints)
+                .build()
+            
+            workManager.enqueueUniquePeriodicWork(
+                FollowedTagsWorker.WORK_NAME,
+                ExistingPeriodicWorkPolicy.UPDATE,
+                workRequest
+            )
+        }
     }
     
     /**
      * Call this method to reschedule the worker when settings change
      */
     fun rescheduleFollowedTagsWorker() {
-        setupFollowedTagsWorker()
+        setupTagMonitoring()
     }
     
     /**

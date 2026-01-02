@@ -129,7 +129,6 @@
         android:title="@string/pref_consent_biometrics_title"
         android:summary="@string/pref_consent_biometrics_summary"
         android:icon="@drawable/ic_fingerprint"
-        android:dependency="consent_pin_unlock"
         android:defaultValue="true" />
 
     <!-- PIN Auto Lock -->

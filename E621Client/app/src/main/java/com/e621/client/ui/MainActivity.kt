@@ -320,7 +320,8 @@ class MainActivity : BaseActivity(), PostPageAdapter.OnPostClickListener {
             notificationManager.createNotificationChannel(channel)
         }
         
-        lifecycleScope.launch(kotlinx.coroutines.Dispatchers.IO) {
+        // Use applicationScope to ensure downloads continue even if activity is destroyed
+        E621Application.instance.applicationScope.launch(kotlinx.coroutines.Dispatchers.IO) {
             val total = posts.size
             var completed = 0
             var failed = 0
@@ -338,7 +339,7 @@ class MainActivity : BaseActivity(), PostPageAdapter.OnPostClickListener {
                 }
                 
                 try {
-                    // Download with real progress updates
+                    // Download with real progress updates using robust OkHttp client
                     val downloadedFile = downloadWithProgressReturningFile(
                         post = post,
                         url = url,
@@ -375,12 +376,15 @@ class MainActivity : BaseActivity(), PostPageAdapter.OnPostClickListener {
                     failed = failed
                 )
                 
-                val resultText = if (failed == 0) {
-                    getString(R.string.selection_download_complete, completed)
-                } else {
-                    getString(R.string.selection_download_complete_partial, completed, failed)
+                // Only show toast if activity is still valid
+                if (!isFinishing && !isDestroyed) {
+                    val resultText = if (failed == 0) {
+                        getString(R.string.selection_download_complete, completed)
+                    } else {
+                        getString(R.string.selection_download_complete_partial, completed, failed)
+                    }
+                    Toast.makeText(this@MainActivity, resultText, Toast.LENGTH_SHORT).show()
                 }
-                Toast.makeText(this@MainActivity, resultText, Toast.LENGTH_SHORT).show()
             }
         }
     }
@@ -521,30 +525,35 @@ class MainActivity : BaseActivity(), PostPageAdapter.OnPostClickListener {
         notificationId: Int
     ): java.io.File? = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
         try {
-            val connection = java.net.URL(url).openConnection() as java.net.HttpURLConnection
-            connection.requestMethod = "GET"
-            connection.connectTimeout = 30000
-            connection.readTimeout = 60000
-            connection.setRequestProperty("User-Agent", "E621Client/1.0 (Android)")
-            
+            // Use OkHttp for robust downloading (same as PostActivity)
+            val client = okhttp3.OkHttpClient.Builder()
+                .connectTimeout(30, java.util.concurrent.TimeUnit.SECONDS)
+                .readTimeout(60, java.util.concurrent.TimeUnit.SECONDS)
+                .build()
+                
+            val requestBuilder = okhttp3.Request.Builder()
+                .url(url)
+                .header("User-Agent", "E621Client/1.0 (Android)")
+                
             // Add auth if logged in
             if (prefs.isLoggedIn) {
                 val credentials = "${prefs.username}:${prefs.apiKey}"
                 val basicAuth = "Basic " + android.util.Base64.encodeToString(
                     credentials.toByteArray(), android.util.Base64.NO_WRAP
                 )
-                connection.setRequestProperty("Authorization", basicAuth)
+                requestBuilder.header("Authorization", basicAuth)
             }
             
-            connection.connect()
+            val response = client.newCall(requestBuilder.build()).execute()
             
-            if (connection.responseCode != java.net.HttpURLConnection.HTTP_OK) {
-                Log.e("E621Client", "HTTP error: ${connection.responseCode}")
-                connection.disconnect()
+            if (!response.isSuccessful) {
+                Log.e("E621Client", "HTTP error: ${response.code}")
+                response.close()
                 return@withContext null
             }
             
-            val totalBytes = connection.contentLengthLong
+            val body = response.body ?: return@withContext null
+            val totalBytes = body.contentLength()
             val totalSizeMB = if (totalBytes > 0) totalBytes / (1024.0 * 1024.0) else 0.0
             
             // Create output file in Downloads/E621
@@ -559,7 +568,7 @@ class MainActivity : BaseActivity(), PostPageAdapter.OnPostClickListener {
             var lastNotificationUpdate = 0L
             val buffer = ByteArray(8192)
             
-            connection.inputStream.use { input ->
+            body.byteStream().use { input ->
                 java.io.FileOutputStream(outputFile).use { output ->
                     var bytesRead: Int
                     while (input.read(buffer).also { bytesRead = it } != -1) {
@@ -600,7 +609,7 @@ class MainActivity : BaseActivity(), PostPageAdapter.OnPostClickListener {
                 }
             }
             
-            connection.disconnect()
+            response.close()
             
             // Notify media scanner
             try {
@@ -809,6 +818,10 @@ class MainActivity : BaseActivity(), PostPageAdapter.OnPostClickListener {
             // Empty search = clear filters and show all posts
             currentTags = ""
             pageAdapter.setTags("")
+            
+            // Force refresh (clear cache) just like swipe-to-refresh
+            pageAdapter.clearCache()
+            
             // Force ViewPager to recreate views
             viewPager.adapter = null
             viewPager.adapter = pageAdapter

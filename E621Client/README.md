@@ -41,6 +41,20 @@ An unofficial Android client for e621.net and e926.net image boards. This applic
 - PIN code lock for privacy
 - Auto-update checker with in-app installation
 
+## Recent Updates (v1.1.0)
+
+### 🚀 New Features
+- **Instant Tag Monitoring:** Added a new "Instant (Beta)" option for followed tags. Checks for new posts every 30 seconds using a robust foreground service.
+- **Custom Notification Sound:** New alerts for followed tags now use a custom notification sound.
+- **Fullscreen Improvements:** 
+  - Fixed image pixelation/blur when zooming in.
+  - Added "Double Tap to Exit" gesture for both images and videos.
+
+### 🐛 Bug Fixes
+- **Biometric Unlock:** Fixed issue where the option appeared disabled on compatible devices. Updated biometric library for Android 14/15 support.
+- **Update Checker:** Fixed "Failed to check updates" error by correcting the repository configuration.
+- **UX Improvements:** Improved PIN setup flow when enabling biometrics.
+
 ## Requirements
 
 - Android 7.0 (API 24) or higher

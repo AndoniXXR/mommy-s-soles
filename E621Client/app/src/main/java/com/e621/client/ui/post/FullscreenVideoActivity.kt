@@ -6,6 +6,8 @@ import android.content.pm.ActivityInfo
 import android.net.Uri
 import android.os.Bundle
 import android.util.Log
+import android.view.GestureDetector
+import android.view.MotionEvent
 import android.view.View
 import android.view.WindowManager
 import android.widget.ImageButton
@@ -86,6 +88,22 @@ class FullscreenVideoActivity : AppCompatActivity() {
         
         initializePlayer()
         setupControls()
+        setupGestures()
+    }
+    
+    private fun setupGestures() {
+        val gestureDetector = GestureDetector(this, object : GestureDetector.SimpleOnGestureListener() {
+            override fun onDoubleTap(e: MotionEvent): Boolean {
+                finish()
+                return true
+            }
+        })
+
+        playerView.setOnTouchListener { _, event ->
+            gestureDetector.onTouchEvent(event)
+            // Return false to allow PlayerView to handle controls toggling
+            false
+        }
     }
     
     private fun hideSystemBars() {

@@ -102,6 +102,7 @@
     
     <!-- Following Check Period -->
     <string-array name="following_period_entries">
+        <item>Instant (Beta)</item>
         <item>Every 15 minutes</item>
         <item>Every 30 minutes</item>
         <item>Every hour</item>
@@ -111,6 +112,7 @@
         <item>Every 24 hours</item>
     </string-array>
     <string-array name="following_period_values">
+        <item>1</item>
         <item>15</item>
         <item>30</item>
         <item>60</item>

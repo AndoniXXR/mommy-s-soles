@@ -185,9 +185,9 @@ class UserPreferences(context: Context) {
         get() = prefs.getBoolean(KEY_FOLLOWED_TAGS_NOTIFICATIONS, true)
         set(value) = prefs.edit { putBoolean(KEY_FOLLOWED_TAGS_NOTIFICATIONS, value) }
     
-    // Check interval in minutes (15, 30, 60, 120, 360, 720, 1440)
+    // Check interval in minutes (1, 15, 30, 60, 120, 360, 720, 1440)
     var followedTagsCheckInterval: Int
-        get() = prefs.getInt(KEY_FOLLOWED_TAGS_INTERVAL, 60)
+        get() = prefs.getInt(KEY_FOLLOWED_TAGS_INTERVAL, 1)
         set(value) = prefs.edit { putInt(KEY_FOLLOWED_TAGS_INTERVAL, value) }
     
     // Only check on WiFi/unmetered networks

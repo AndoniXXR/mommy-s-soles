@@ -833,7 +833,10 @@ class PostActivity : AppCompatActivity(), PostViewPagerAdapter.PostInteractionLi
     
     private fun performDirectDownload(urlString: String, fileName: String, post: Post) {
         val fileExtension = post.file.ext
-        lifecycleScope.launch {
+        val appContext = applicationContext // Capture application context
+        
+        // Use application scope to ensure download continues even if activity is destroyed
+        E621Application.instance.applicationScope.launch {
             var downloadSuccess = false
             var lastException: Exception? = null
             
@@ -868,7 +871,16 @@ class PostActivity : AppCompatActivity(), PostViewPagerAdapter.PostInteractionLi
             if (downloadSuccess) {
                 Log.d("E621Download", "Download successful")
                 showDownloadCompleteNotification(post.id, fileName, true, fileExtension)
-                Toast.makeText(this@PostActivity, R.string.download_complete, Toast.LENGTH_SHORT).show()
+                
+                // Safe UI update
+                runOnUiThread {
+                    if (!isFinishing && !isDestroyed) {
+                        Toast.makeText(this@PostActivity, R.string.download_complete, Toast.LENGTH_SHORT).show()
+                    } else {
+                        // Fallback toast on application context if activity is gone
+                        Toast.makeText(appContext, R.string.download_complete, Toast.LENGTH_SHORT).show()
+                    }
+                }
                 
                 // Notify media scanner for non-SAF downloads
                 if (!prefs.storageCustomFolderEnabled || prefs.storageCustomFolder == null) {
@@ -876,7 +888,7 @@ class PostActivity : AppCompatActivity(), PostViewPagerAdapter.PostInteractionLi
                         val outputFile = getOutputFileForPublicStorage(fileName)
                         if (outputFile.exists()) {
                             val uri = Uri.fromFile(outputFile)
-                            sendBroadcast(Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE, uri))
+                            appContext.sendBroadcast(Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE, uri))
                         }
                     } catch (e: Exception) {
                         Log.e("E621Download", "Media scanner error: ${e.message}")
@@ -886,10 +898,26 @@ class PostActivity : AppCompatActivity(), PostViewPagerAdapter.PostInteractionLi
                 Log.e("E621Download", "All download attempts failed")
                 showDownloadCompleteNotification(post.id, fileName, false, fileExtension)
                 val errorMsg = lastException?.message ?: getString(R.string.download_failed)
-                Toast.makeText(this@PostActivity, errorMsg, Toast.LENGTH_LONG).show()
+                
+                // Safe UI update
+                runOnUiThread {
+                    if (!isFinishing && !isDestroyed) {
+                        Toast.makeText(this@PostActivity, errorMsg, Toast.LENGTH_LONG).show()
+                    } else {
+                        Toast.makeText(appContext, errorMsg, Toast.LENGTH_LONG).show()
+                    }
+                }
             }
             
-            resetDownloadState()
+            // Reset state safely
+            runOnUiThread {
+                if (!isFinishing && !isDestroyed) {
+                    resetDownloadState()
+                } else {
+                    // Just clear the set if activity is gone
+                    completedDownloads.remove(post.id) // Remove directly as we can't call resetDownloadState which touches UI
+                }
+            }
         }
     }
     
@@ -1130,7 +1158,7 @@ class PostActivity : AppCompatActivity(), PostViewPagerAdapter.PostInteractionLi
             }
             
             // Final progress update
-            updateDownloadProgressDetailed(postId, downloadedSize, totalSize)
+            // updateDownloadProgressDetailed(postId, downloadedSize, totalSize) // Removed to prevent race condition with complete notification
             
             // Verify downloaded size matches expected
             if (totalSize > 0 && downloadedSize != totalSize) {
@@ -1677,6 +1705,8 @@ class PostActivity : AppCompatActivity(), PostViewPagerAdapter.PostInteractionLi
     }
     
     private fun toggleUIVisibility() {
+        // Disabled to prevent accidental hiding of UI
+        /*
         uiHidden = !uiHidden
         layoutButtons.visibility = if (uiHidden) View.GONE else View.VISIBLE
         
@@ -1692,6 +1722,7 @@ class PostActivity : AppCompatActivity(), PostViewPagerAdapter.PostInteractionLi
         } else {
             updateSystemUI()
         }
+        */
     }
     
     // PostInteractionListener implementation
@@ -1920,7 +1951,7 @@ class PostActivity : AppCompatActivity(), PostViewPagerAdapter.PostInteractionLi
     }
     
     override fun onImageTapped() {
-        toggleUIVisibility()
+        // toggleUIVisibility() - Disabled to prevent accidental hiding of UI
     }
     
     override fun onImageLongPress(post: Post) {

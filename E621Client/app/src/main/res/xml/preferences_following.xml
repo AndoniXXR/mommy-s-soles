@@ -33,7 +33,7 @@
         android:entries="@array/following_period_entries"
         android:entryValues="@array/following_period_values"
         android:dependency="following_enabled"
-        android:defaultValue="60"
+        android:defaultValue="1"
         app:useSimpleSummaryProvider="true" />
 
     <!-- Display Tag -->

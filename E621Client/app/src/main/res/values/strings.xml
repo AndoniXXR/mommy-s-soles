@@ -208,6 +208,10 @@
     <string name="forgot_pin">Forgot PIN?</string>
     <string name="forgot_pin_title">Forgot PIN?</string>
     <string name="forgot_pin_message">To reset your PIN, you will need to log out. This will clear your saved data.</string>
+    
+    <string name="pin_required_title">PIN Required</string>
+    <string name="pin_required_message">To use biometric unlock, you must first set up a PIN code as a backup.</string>
+    <string name="setup_pin">Set up PIN</string>
     <string name="too_many_attempts_title">Too Many Attempts</string>
     <string name="too_many_attempts_message">You have entered the wrong PIN too many times. You will be logged out for security.</string>
     

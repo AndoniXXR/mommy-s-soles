@@ -13,12 +13,17 @@
     
     <!-- Notifications -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
     
     <!-- Vibration for haptic feedback -->
     <uses-permission android:name="android.permission.VIBRATE" />
     
     <!-- Request Install Packages for auto-update -->
     <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
+    
+    <!-- Boot completed for restarting service -->
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
 
     <application
         android:name=".E621Application"
@@ -48,6 +53,21 @@
             android:name=".ui.PinCodeActivity"
             android:exported="false"
             android:theme="@style/Theme.E621Client" />
+
+        <service
+            android:name=".service.TagMonitoringService"
+            android:enabled="true"
+            android:exported="false"
+            android:foregroundServiceType="dataSync" />
+            
+        <receiver
+            android:name=".receiver.BootReceiver"
+            android:enabled="true"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+            </intent-filter>
+        </receiver>
 
         <!-- Main Activity -->
         <activity

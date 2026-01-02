@@ -378,6 +378,11 @@ class PostPageAdapter(
             private val txtInfo: TextView = itemView.findViewById(R.id.txtInfo)
             private val viewRating: View = itemView.findViewById(R.id.viewRating)
             private val fLOverlay: FrameLayout = itemView.findViewById(R.id.fLOverlay)
+            
+            // Custom long press handling
+            private val handler = android.os.Handler(android.os.Looper.getMainLooper())
+            private var longPressRunnable: Runnable? = null
+            private var isLongPressTriggered = false
 
             fun bind(post: Post) {
                 // Load thumbnail
@@ -426,15 +431,45 @@ class PostPageAdapter(
 
                 // Click listeners
                 itemView.setOnClickListener {
-                    if (isInSelectionMode) {
-                        toggleSelection(post)
-                    } else {
-                        listener.onPostClick(post, bindingAdapterPosition)
+                    // Only handle click if it wasn't a long press
+                    if (!isLongPressTriggered) {
+                        if (isInSelectionMode) {
+                            toggleSelection(post)
+                        } else {
+                            listener.onPostClick(post, bindingAdapterPosition)
+                        }
                     }
                 }
-                itemView.setOnLongClickListener {
-                    toggleSelection(post)
-                    true
+                
+                // Custom Long Press (2 seconds) to prevent accidental selection
+                itemView.setOnTouchListener { v, event ->
+                    when (event.action) {
+                        android.view.MotionEvent.ACTION_DOWN -> {
+                            isLongPressTriggered = false
+                            longPressRunnable = Runnable {
+                                isLongPressTriggered = true
+                                toggleSelection(post)
+                                // Prevent parent from intercepting touch events once long press triggers
+                                v.parent.requestDisallowInterceptTouchEvent(true)
+                            }
+                            handler.postDelayed(longPressRunnable!!, 1000) // 1 second delay
+                            false // Let system handle visual state (ripple)
+                        }
+                        android.view.MotionEvent.ACTION_UP -> {
+                            longPressRunnable?.let { handler.removeCallbacks(it) }
+                            // If long press triggered, consume the event to prevent onClick
+                            if (isLongPressTriggered) {
+                                true
+                            } else {
+                                false
+                            }
+                        }
+                        android.view.MotionEvent.ACTION_CANCEL -> {
+                            longPressRunnable?.let { handler.removeCallbacks(it) }
+                            false
+                        }
+                        else -> false
+                    }
                 }
             }
             

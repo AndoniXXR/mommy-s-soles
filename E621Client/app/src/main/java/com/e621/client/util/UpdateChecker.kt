@@ -28,6 +28,7 @@ class UpdateChecker(private val context: Context) {
     
     companion object {
         private const val TAG = "UpdateChecker"
+        private const val USER_AGENT = "E621Client/1.0"
         
         // GitHub API endpoint for releases
         private const val GITHUB_RELEASES_URL = "https://api.github.com/repos/AndoniXXR/mommy-s-soles/releases/latest"
@@ -74,6 +75,7 @@ class UpdateChecker(private val context: Context) {
             val request = Request.Builder()
                 .url(GITHUB_RELEASES_URL)
                 .header("Accept", "application/vnd.github.v3+json")
+                .header("User-Agent", USER_AGENT)
                 .build()
             
             val response = client.newCall(request).execute()
@@ -127,6 +129,7 @@ class UpdateChecker(private val context: Context) {
         try {
             val request = Request.Builder()
                 .url(VERSION_CHECK_URL)
+                .header("User-Agent", USER_AGENT)
                 .build()
             
             val response = client.newCall(request).execute()
