@@ -510,7 +510,7 @@ class UserPreferences(context: Context) {
     
     // Enable custom download folder
     var storageCustomFolderEnabled: Boolean
-        get() = prefs.getBoolean(KEY_STORAGE_CUSTOM_FOLDER_ENABLED, true)
+        get() = prefs.getBoolean(KEY_STORAGE_CUSTOM_FOLDER_ENABLED, false)
         set(value) = prefs.edit { putBoolean(KEY_STORAGE_CUSTOM_FOLDER_ENABLED, value) }
     
     // Custom folder URI (SAF document tree URI)

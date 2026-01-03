@@ -167,7 +167,7 @@ class DownloadWorker(
                 android.media.MediaScannerConnection.scanFile(
                     applicationContext,
                     arrayOf(tempFile.absolutePath),
-                    arrayOf(mimeType),
+                    null, // Pass null to force scanner to determine mimeType and extract metadata
                     null
                 )
             }
