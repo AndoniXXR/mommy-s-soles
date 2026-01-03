@@ -50,7 +50,12 @@ class PostPageAdapter(
     // Filtered posts per page
     private val filteredCache = mutableMapOf<Int, List<Post>>()
     private var currentTags = ""
-    private var totalPages = Int.MAX_VALUE // We don't know the total until we get an empty response
+    
+    // Dynamic pagination: track available pages instead of assuming infinite
+    private var availablePages = 1 // Start with 1 page, add more as we confirm content exists
+    private var hasReachedEnd = false // True when we've confirmed no more pages exist
+    private var isLoadingNextPage = false // Prevent multiple simultaneous next-page loads
+    
     private var tagsVersion = 0 // Version counter to invalidate old requests
     
     // Filter state
@@ -137,7 +142,9 @@ class PostPageAdapter(
     fun clearCache() {
         pageCache.clear()
         filteredCache.clear()
-        totalPages = Int.MAX_VALUE
+        availablePages = 1 // Reset to 1 page
+        hasReachedEnd = false
+        isLoadingNextPage = false
         notifyDataSetChanged()
     }
 
@@ -146,8 +153,8 @@ class PostPageAdapter(
     fun setCachedPosts(page: Int, posts: List<Post>) {
         pageCache[page] = posts
         filteredCache[page] = filterAndSortPosts(posts)
-        if (posts.isEmpty() && page < totalPages) {
-            totalPages = page
+        if (posts.isEmpty()) {
+            hasReachedEnd = true
         }
     }
     
@@ -183,7 +190,7 @@ class PostPageAdapter(
         listener.onSelectionChanged()
     }
 
-    override fun getItemCount(): Int = totalPages
+    override fun getItemCount(): Int = availablePages
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): PageViewHolder {
         val view = LayoutInflater.from(parent.context)
@@ -218,15 +225,82 @@ class PostPageAdapter(
             // Check cache first (use filtered cache for display)
             val cachedPosts = filteredCache[page]
             if (cachedPosts != null) {
+                if (cachedPosts.isEmpty() && hasReachedEnd) {
+                    // This is an empty last page that shouldn't be shown
+                    // Show empty state or just hide content
+                    posts.clear()
+                    gridAdapter.notifyDataSetChanged()
+                    showContent()
+                    return
+                }
                 posts.clear()
                 posts.addAll(cachedPosts)
                 gridAdapter.notifyDataSetChanged()
                 showContent()
+                
+                // Prefetch next page if we're on the last available page
+                if (page == availablePages && !hasReachedEnd && !isLoadingNextPage) {
+                    prefetchNextPage(page + 1)
+                }
                 return
             }
 
             // Load posts for this page
             loadPage(page)
+        }
+        
+        /**
+         * Prefetch the next page to check if more content exists
+         */
+        private fun prefetchNextPage(nextPage: Int) {
+            if (isLoadingNextPage || hasReachedEnd) return
+            isLoadingNextPage = true
+            
+            val requestVersion = tagsVersion
+            val requestTags = currentTags
+            
+            CoroutineScope(Dispatchers.IO).launch {
+                try {
+                    Log.d("E621Client", "Prefetching page $nextPage")
+                    val response = api.posts.list(
+                        tags = requestTags.ifEmpty { null },
+                        page = nextPage,
+                        limit = 75
+                    )
+                    
+                    withContext(Dispatchers.Main) {
+                        isLoadingNextPage = false
+                        
+                        if (requestVersion != tagsVersion) return@withContext
+                        
+                        if (response.isSuccessful) {
+                            val newPosts = response.body()?.posts ?: emptyList()
+                            Log.d("E621Client", "Prefetch page $nextPage: ${newPosts.size} posts")
+                            
+                            if (newPosts.isNotEmpty()) {
+                                // Cache the prefetched page
+                                pageCache[nextPage] = newPosts
+                                filteredCache[nextPage] = filterAndSortPosts(newPosts)
+                                
+                                // Add the page to available pages
+                                if (nextPage >= availablePages) {
+                                    availablePages = nextPage + 1
+                                    notifyItemInserted(nextPage - 1)
+                                }
+                            } else {
+                                // No more content
+                                hasReachedEnd = true
+                                Log.d("E621Client", "Prefetch confirmed end at page $nextPage")
+                            }
+                        }
+                    }
+                } catch (e: Exception) {
+                    withContext(Dispatchers.Main) {
+                        isLoadingNextPage = false
+                    }
+                    Log.e("E621Client", "Prefetch error: ${e.message}")
+                }
+            }
         }
 
         private fun loadPage(page: Int) {
@@ -264,10 +338,23 @@ class PostPageAdapter(
                             val filteredPosts = filterAndSortPosts(newPosts)
                             filteredCache[page] = filteredPosts
                             
-                            // Check if this is the last page
-                            if (newPosts.isEmpty()) {
-                                totalPages = page
-                                notifyDataSetChanged()
+                            // Dynamic pagination: if this page has content, add next page
+                            if (newPosts.isNotEmpty()) {
+                                // If we loaded page N with content and page N+1 doesn't exist yet, add it
+                                if (page >= availablePages && !hasReachedEnd) {
+                                    availablePages = page + 1
+                                    Log.d("E621Client", "Added page ${page + 1}, now have $availablePages pages available")
+                                    notifyItemInserted(page) // Insert at position 'page' (0-indexed = page N+1)
+                                }
+                            } else {
+                                // Empty response = we've reached the end
+                                hasReachedEnd = true
+                                Log.d("E621Client", "Reached end at page $page")
+                                // Remove this empty page if it was added
+                                if (availablePages > page - 1 && page > 1) {
+                                    availablePages = page - 1
+                                    notifyDataSetChanged()
+                                }
                             }
                             
                             // Update UI if still on same page (use filtered posts)

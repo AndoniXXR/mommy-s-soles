@@ -76,7 +76,7 @@ class PostViewPagerAdapter(
         fun onArtistClicked(artist: String)
         fun onUserClicked(username: String)
         fun onParentClicked(parentId: Int)
-        fun onChildrenClicked(parentId: Int, clickedChildId: Int)
+        fun onChildrenClicked(parentId: Int)
         fun onPoolClicked(poolId: Int)
         fun onSourceClicked(source: String)
         fun onImageTapped()
@@ -759,46 +759,32 @@ class PostViewPagerAdapter(
                     txtParent.visibility = View.GONE
                 }
                 
-                // Children: "Hijo: ID" or "Hijos: ID1, ID2, ..."
-                if (hasChildren && childrenList.isNotEmpty()) {
+                // Children: Show "Hijos" indicator when post has children
+                if (hasChildren) {
                     txtChildren.visibility = View.VISIBLE
                     
-                    val prefixRes = if (childrenList.size == 1) R.string.post_child else R.string.post_children
-                    // We need to construct the string manually to make links clickable
-                    // String format in xml is likely "Hijos: %1$s"
-                    // We will extract "Hijos: " part and append clickable IDs
-                    
-                    val fullTextDummy = itemView.context.getString(prefixRes, "")
-                    val prefix = fullTextDummy.replace("  ", " ").trim() // Simple heuristic or just hardcode "Hijos: "
-                    
-                    // Better approach: Build the SpannableString
-                    val sb = android.text.SpannableStringBuilder()
-                    sb.append(if (childrenList.size == 1) "Hijo: " else "Hijos: ")
-                    
-                    childrenList.forEachIndexed { index, childId ->
-                        if (index > 0) sb.append(", ")
-                        
-                        val start = sb.length
-                        sb.append(childId.toString())
-                        val end = sb.length
-                        
-                        sb.setSpan(object : ClickableSpan() {
-                            override fun onClick(widget: View) {
-                                onPostInteraction.onChildrenClicked(post.id, childId)
-                            }
-                            
-                            override fun updateDrawState(ds: TextPaint) {
-                                super.updateDrawState(ds)
-                                ds.isUnderlineText = true
-                                ds.color = itemView.context.getColor(R.color.accent)
-                            }
-                        }, start, end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+                    // Show children count or indicator - the full list will be loaded on click
+                    val childCount = childrenList.size
+                    val displayText = if (childCount > 0) {
+                        if (childCount == 1) "Hijo: ${childrenList[0]}" else "Hijos: $childCount posts"
+                    } else {
+                        "Hijos: Ver todos"  // has_children is true but list is empty/truncated
                     }
                     
-                    txtChildren.text = sb
-                    txtChildren.movementMethod = LinkMovementMethod.getInstance()
-                    // Remove the general click listener since we have individual links
-                    txtChildren.setOnClickListener(null) 
+                    txtChildren.text = displayText
+                    txtChildren.setTextColor(itemView.context.getColor(R.color.accent))
+                    
+                    // Add visual feedback (Ripple)
+                    val outValue = android.util.TypedValue()
+                    itemView.context.theme.resolveAttribute(android.R.attr.selectableItemBackground, outValue, true)
+                    txtChildren.setBackgroundResource(outValue.resourceId)
+                    txtChildren.isClickable = true
+                    txtChildren.isFocusable = true
+                    
+                    // Single click handler - will load full list and show dialog
+                    txtChildren.setOnClickListener {
+                        onPostInteraction.onChildrenClicked(post.id)
+                    }
                 } else {
                     txtChildren.visibility = View.GONE
                 }

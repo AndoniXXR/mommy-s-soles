@@ -12,6 +12,7 @@ import com.e621.client.data.api.E621Api
 import com.e621.client.data.preferences.UserPreferences
 import com.e621.client.service.TagMonitoringService
 import com.e621.client.worker.FollowedTagsWorker
+import com.e621.client.worker.UpdateCheckWorker
 import java.util.concurrent.TimeUnit
 
 /**
@@ -47,6 +48,9 @@ class E621Application : Application() {
         
         // Setup followed tags monitoring (Worker or Service)
         setupTagMonitoring()
+        
+        // Setup automatic update checking (daily)
+        setupUpdateChecker()
         
         // Check cache size and clear if needed
         checkAndClearCache()
@@ -209,6 +213,32 @@ class E621Application : Application() {
         } catch (e: Exception) {
             android.util.Log.e("E621Cache", "Error clearing cache: ${e.message}", e)
         }
+    }
+    
+    /**
+     * Setup periodic update checker (runs daily)
+     */
+    private fun setupUpdateChecker() {
+        val workManager = WorkManager.getInstance(this)
+        
+        val constraints = Constraints.Builder()
+            .setRequiredNetworkType(NetworkType.CONNECTED)
+            .build()
+        
+        // Check for updates once per day (24 hours)
+        val updateWorkRequest = PeriodicWorkRequestBuilder<UpdateCheckWorker>(
+            24, TimeUnit.HOURS
+        )
+            .setConstraints(constraints)
+            .build()
+        
+        workManager.enqueueUniquePeriodicWork(
+            UpdateCheckWorker.WORK_NAME,
+            ExistingPeriodicWorkPolicy.KEEP, // Keep existing, don't replace
+            updateWorkRequest
+        )
+        
+        android.util.Log.d("E621App", "Update checker scheduled (daily)")
     }
 
     companion object {

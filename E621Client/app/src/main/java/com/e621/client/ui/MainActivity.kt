@@ -130,7 +130,33 @@ class MainActivity : BaseActivity(), PostPageAdapter.OnPostClickListener {
     }
     
     private fun handleNotificationIntent(intent: Intent?) {
-        intent?.getStringExtra("search_tag")?.let { tag ->
+        if (intent == null) return
+        
+        // Handle update notification tap
+        if (intent.getBooleanExtra("check_update", false)) {
+            val version = intent.getStringExtra("update_version") ?: return
+            val url = intent.getStringExtra("update_url") ?: return
+            val changelog = intent.getStringExtra("update_changelog") ?: ""
+            
+            val updateInfo = UpdateChecker.UpdateInfo(
+                versionName = version,
+                versionCode = 0,  // Not used for display
+                downloadUrl = url,
+                changelog = changelog,
+                isNewer = true  // Already verified by worker
+            )
+            showUpdateDialog(updateInfo)
+            
+            // Clear extras to prevent re-processing
+            intent.removeExtra("check_update")
+            intent.removeExtra("update_version")
+            intent.removeExtra("update_url")
+            intent.removeExtra("update_changelog")
+            return
+        }
+        
+        // Handle search tag from followed tags notification
+        intent.getStringExtra("search_tag")?.let { tag ->
             // Set the tag in search view and perform search
             currentTags = tag
             searchView.post {
@@ -714,9 +740,13 @@ class MainActivity : BaseActivity(), PostPageAdapter.OnPostClickListener {
                         "hint" -> {
                             // Do nothing for hint items
                         }
-                        else -> {
-                            // Perform search with the suggestion - directly execute
+                        "history" -> {
+                            // History items: execute search directly (they are complete queries)
                             performSearch(suggestion)
+                        }
+                        else -> {
+                            // Tag suggestions: insert into current query, replacing only the current word
+                            insertTagSuggestion(suggestion)
                         }
                     }
                 }
@@ -861,7 +891,10 @@ class MainActivity : BaseActivity(), PostPageAdapter.OnPostClickListener {
                 val cursor = MatrixCursor(arrayOf(BaseColumns._ID, "suggest_text", "suggest_info", "suggest_type", "suggest_icon"))
                 var id = 0
                 
-                // Add matching history items first with history icon
+                // Extract the last word (current word being typed) for tag suggestions
+                val lastWord = getLastWord(query)
+                
+                // Add matching history items first with history icon (match against full query)
                 prefs.searchHistory
                     .filter { it.contains(query, ignoreCase = true) }
                     .take(3)
@@ -869,9 +902,9 @@ class MainActivity : BaseActivity(), PostPageAdapter.OnPostClickListener {
                         cursor.addRow(arrayOf(id++, item, "Recent search", "history", R.drawable.ic_history))
                     }
                 
-                // Fetch from API if query is long enough
-                if (query.length >= 2) {
-                    val response = api.tags.autocomplete(query, 10)
+                // Fetch tag suggestions for the LAST WORD only (not the full query)
+                if (lastWord.length >= 2) {
+                    val response = api.tags.autocomplete(lastWord, 10)
                     if (response.isSuccessful) {
                         response.body()?.forEach { tag ->
                             val categoryName = getCategoryName(tag.category ?: 0)
@@ -885,6 +918,66 @@ class MainActivity : BaseActivity(), PostPageAdapter.OnPostClickListener {
                 suggestionsAdapter.changeCursor(cursor)
             } catch (e: Exception) {
                 Log.e("E621Client", "Error fetching suggestions: ${e.message}")
+            }
+        }
+    }
+    
+    /**
+     * Get the last word being typed (after the last space)
+     */
+    private fun getLastWord(query: String): String {
+        val trimmed = query.trim()
+        if (trimmed.isEmpty() || trimmed.endsWith(" ")) {
+            return ""
+        }
+        val lastSpaceIndex = trimmed.lastIndexOf(' ')
+        return if (lastSpaceIndex >= 0) {
+            trimmed.substring(lastSpaceIndex + 1)
+        } else {
+            trimmed
+        }
+    }
+    
+    /**
+     * Insert a tag suggestion into the current query, replacing only the current word being typed.
+     * This preserves existing tags and only replaces the partial word.
+     */
+    private fun insertTagSuggestion(tagName: String) {
+        val currentQuery = searchView.query?.toString() ?: ""
+        val newQuery = buildQueryWithTag(currentQuery, tagName)
+        
+        // Update SearchView without triggering search
+        searchView.setQuery(newQuery, false)
+        
+        // Move cursor to end
+        searchAutoComplete?.setSelection(newQuery.length)
+    }
+    
+    /**
+     * Build new query by inserting tag, replacing only the current word being typed.
+     * Mimics the behavior of the original app's MySearchView.
+     */
+    private fun buildQueryWithTag(currentQuery: String, newTag: String): String {
+        val trimmedTag = newTag.trim()
+        val trimmedQuery = currentQuery.trim()
+        
+        return when {
+            // Case 1: Empty query - just use the new tag
+            trimmedQuery.isEmpty() -> trimmedTag
+            
+            // Case 2: Query ends with space - append the new tag
+            currentQuery.endsWith(" ") -> "$trimmedQuery $trimmedTag"
+            
+            // Case 3: Query has content - replace the last word with the new tag
+            else -> {
+                if (trimmedQuery.contains(" ")) {
+                    // Multiple words: keep everything before the last space, add new tag
+                    val beforeLastWord = trimmedQuery.substring(0, trimmedQuery.lastIndexOf(" "))
+                    "$beforeLastWord $trimmedTag"
+                } else {
+                    // Single word: replace it entirely
+                    trimmedTag
+                }
             }
         }
     }

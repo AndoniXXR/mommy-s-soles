@@ -7,9 +7,11 @@ import android.content.ContentValues
 import android.content.Context
 import android.content.Intent
 import android.content.pm.ServiceInfo
+import android.media.MediaScannerConnection
 import android.net.Uri
 import android.os.Build
 import android.os.Environment
+import android.provider.DocumentsContract
 import android.provider.MediaStore
 import android.util.Log
 import androidx.core.content.FileProvider
@@ -121,8 +123,17 @@ class DownloadWorker(
                 finalUri = result?.second
             }
             
+            // Try MediaStore for Android 10+ (API 29) if not using custom folder
+            if (outputStream == null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                val result = openMediaStoreOutputStream(fileName)
+                if (result != null) {
+                    outputStream = result.first
+                    finalUri = result.second
+                }
+            }
+            
             if (outputStream == null) {
-                // Fallback to public
+                // Fallback to public File (Legacy < Android 10)
                 val file = getPublicFile(fileName)
                 tempFile = file
                 outputStream = FileOutputStream(file)
@@ -159,17 +170,29 @@ class DownloadWorker(
             
             outputStream.flush()
             
+            // Finalize MediaStore entry (remove pending status)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q && finalUri != null && tempFile == null && !useCustomFolder) {
+                val values = ContentValues().apply {
+                    put(MediaStore.MediaColumns.IS_PENDING, 0)
+                }
+                applicationContext.contentResolver.update(finalUri, values, null, null)
+            }
+            
             // Final success notification
             val mimeType = getMimeType(fileName)
             
             // Scan file to make it visible in Gallery/Downloads
             if (tempFile != null) {
-                android.media.MediaScannerConnection.scanFile(
+                // Legacy file approach - scan directly
+                MediaScannerConnection.scanFile(
                     applicationContext,
                     arrayOf(tempFile.absolutePath),
-                    null, // Pass null to force scanner to determine mimeType and extract metadata
+                    arrayOf(mimeType),
                     null
                 )
+            } else if (useCustomFolder && finalUri != null) {
+                // SAF approach - try to get real path and scan
+                scanSafFile(finalUri, mimeType)
             }
             
             showSuccessNotification(resultNotificationId, postId, finalUri, mimeType)
@@ -179,6 +202,9 @@ class DownloadWorker(
             try {
                 if (useCustomFolder) {
                     // Hard to delete SAF file on error without keeping reference to DocumentFile
+                } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q && finalUri != null && tempFile == null) {
+                    // Delete incomplete MediaStore entry
+                    applicationContext.contentResolver.delete(finalUri, null, null)
                 } else {
                     tempFile?.delete()
                 }
@@ -187,6 +213,51 @@ class DownloadWorker(
         } finally {
             outputStream?.close()
             body.close()
+        }
+    }
+
+    private fun openMediaStoreOutputStream(fileName: String): Pair<OutputStream, Uri>? {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) return null
+        
+        try {
+            val resolver = applicationContext.contentResolver
+            val mimeType = getMimeType(fileName)
+            
+            val parts = fileName.split("/")
+            val actualName = parts.last()
+            val subDir = if (parts.size > 1) parts.dropLast(1).joinToString("/") else ""
+            
+            // Determine the correct MediaStore collection and relative path based on mime type
+            val (collection, relativePath) = when {
+                mimeType.startsWith("image/") -> {
+                    val path = if (subDir.isNotEmpty()) "${Environment.DIRECTORY_PICTURES}/E621/$subDir" else "${Environment.DIRECTORY_PICTURES}/E621"
+                    Pair(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, path)
+                }
+                mimeType.startsWith("video/") -> {
+                    val path = if (subDir.isNotEmpty()) "${Environment.DIRECTORY_MOVIES}/E621/$subDir" else "${Environment.DIRECTORY_MOVIES}/E621"
+                    Pair(MediaStore.Video.Media.EXTERNAL_CONTENT_URI, path)
+                }
+                else -> {
+                    // Fallback to Downloads for other types
+                    val path = if (subDir.isNotEmpty()) "${Environment.DIRECTORY_DOWNLOADS}/E621/$subDir" else "${Environment.DIRECTORY_DOWNLOADS}/E621"
+                    Pair(MediaStore.Downloads.EXTERNAL_CONTENT_URI, path)
+                }
+            }
+            
+            val values = ContentValues().apply {
+                put(MediaStore.MediaColumns.DISPLAY_NAME, actualName)
+                put(MediaStore.MediaColumns.MIME_TYPE, mimeType)
+                put(MediaStore.MediaColumns.RELATIVE_PATH, relativePath)
+                put(MediaStore.MediaColumns.IS_PENDING, 1)
+            }
+            
+            val uri = resolver.insert(collection, values) ?: return null
+            val stream = resolver.openOutputStream(uri) ?: return null
+            
+            return Pair(stream, uri)
+        } catch (e: Exception) {
+            Log.e("DownloadWorker", "MediaStore Error", e)
+            return null
         }
     }
 
@@ -260,6 +331,76 @@ class DownloadWorker(
             "webm" -> "video/webm"
             "mp4" -> "video/mp4"
             else -> "application/octet-stream"
+        }
+    }
+    
+    /**
+     * Scan SAF file to make it visible in gallery and other apps.
+     * Attempts to get the real file path from the SAF URI and scan it.
+     */
+    private fun scanSafFile(uri: Uri, mimeType: String) {
+        try {
+            // Try to get the real file path from SAF URI
+            val realPath = getRealPathFromSafUri(uri)
+            if (realPath != null) {
+                MediaScannerConnection.scanFile(
+                    applicationContext,
+                    arrayOf(realPath),
+                    arrayOf(mimeType),
+                    null
+                )
+                Log.d("DownloadWorker", "Scanned SAF file: $realPath")
+            } else {
+                Log.w("DownloadWorker", "Could not get real path for SAF URI: $uri")
+            }
+        } catch (e: Exception) {
+            Log.e("DownloadWorker", "Error scanning SAF file", e)
+        }
+    }
+    
+    /**
+     * Try to extract real file path from SAF URI.
+     * Works for primary external storage documents.
+     */
+    private fun getRealPathFromSafUri(uri: Uri): String? {
+        try {
+            // Check if it's a document URI
+            if (!DocumentsContract.isDocumentUri(applicationContext, uri)) {
+                return null
+            }
+            
+            val docId = DocumentsContract.getDocumentId(uri)
+            val authority = uri.authority
+            
+            // Handle external storage documents (most common case)
+            if (authority == "com.android.externalstorage.documents") {
+                val split = docId.split(":")
+                if (split.size >= 2) {
+                    val type = split[0]
+                    val relativePath = split[1]
+                    
+                    if ("primary".equals(type, ignoreCase = true)) {
+                        return "${Environment.getExternalStorageDirectory()}/$relativePath"
+                    } else {
+                        // Handle secondary storage (SD card)
+                        val externalDirs = applicationContext.getExternalFilesDirs(null)
+                        for (dir in externalDirs) {
+                            if (dir != null) {
+                                val path = dir.absolutePath
+                                if (path.contains(type)) {
+                                    val basePath = path.substring(0, path.indexOf("/Android"))
+                                    return "$basePath/$relativePath"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            
+            return null
+        } catch (e: Exception) {
+            Log.e("DownloadWorker", "Error getting real path from SAF URI", e)
+            return null
         }
     }
 

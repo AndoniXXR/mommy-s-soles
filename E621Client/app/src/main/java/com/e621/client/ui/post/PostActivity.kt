@@ -1231,25 +1231,24 @@ class PostActivity : AppCompatActivity(), PostViewPagerAdapter.PostInteractionLi
         startActivity(intent)
     }
     
-    override fun onChildrenClicked(parentId: Int, clickedChildId: Int) {
+    override fun onChildrenClicked(parentId: Int) {
         if (!isSafeClick()) return
-        // Search for children: parent:parentId - stay in PostActivity flow
+        // Load all children and show selection dialog
         lifecycleScope.launch {
             try {
-                val response = api.posts.list(tags = "parent:$parentId", page = 1, limit = 75)
+                val response = api.posts.list(tags = "parent:$parentId", page = 1, limit = 320)
                 if (response.isSuccessful) {
                     val childPosts = response.body()?.posts
                     if (!childPosts.isNullOrEmpty()) {
-                        // Open new PostActivity with children posts
-                        POSTS_TO_SHOW = childPosts
-                        
-                        // Find the index of the clicked child
-                        val targetIndex = childPosts.indexOfFirst { it.id == clickedChildId }
-                        val startPosition = if (targetIndex != -1) targetIndex else 0
-                        
-                        val intent = Intent(this@PostActivity, PostActivity::class.java)
-                        intent.putExtra(EXTRA_POSITION, startPosition)
-                        startActivity(intent)
+                        if (childPosts.size == 1) {
+                            // Only 1 child - open directly
+                            val intent = Intent(this@PostActivity, PostActivity::class.java)
+                            intent.putExtra(EXTRA_POST_ID, childPosts[0].id)
+                            startActivity(intent)
+                        } else {
+                            // Multiple children - show selection dialog
+                            showChildrenSelectionDialog(childPosts)
+                        }
                     } else {
                         Toast.makeText(this@PostActivity, "No children found", Toast.LENGTH_SHORT).show()
                     }
@@ -1258,6 +1257,23 @@ class PostActivity : AppCompatActivity(), PostViewPagerAdapter.PostInteractionLi
                 Toast.makeText(this@PostActivity, "Error loading children", Toast.LENGTH_SHORT).show()
             }
         }
+    }
+    
+    private fun showChildrenSelectionDialog(children: List<Post>) {
+        // Create array of child IDs as strings for the dialog
+        val childIds = children.map { "#${it.id}" }.toTypedArray()
+        
+        AlertDialog.Builder(this, R.style.Theme_E621Client_AlertDialog)
+            .setTitle("Children Posts")
+            .setMessage("Tap on a child post to view it")
+            .setItems(childIds) { _, which ->
+                // Open the selected child post
+                val intent = Intent(this, PostActivity::class.java)
+                intent.putExtra(EXTRA_POST_ID, children[which].id)
+                startActivity(intent)
+            }
+            .setNegativeButton(android.R.string.cancel, null)
+            .show()
     }
     
     override fun onPoolClicked(poolId: Int) {

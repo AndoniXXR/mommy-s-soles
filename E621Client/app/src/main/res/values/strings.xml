@@ -271,6 +271,10 @@
     <string name="update_download">Download</string>
     <string name="update_later">Later</string>
     <string name="update_progress">Downloading: %1$d%%</string>
+    <string name="update_notification_title">Update Available</string>
+    <string name="update_notification_text">E621 Client v%1$s is available. Tap to update.</string>
+    <string name="update_channel_name">App Updates</string>
+    <string name="update_channel_description">Notifications for new app versions</string>
     
     <!-- Pools -->
     <string name="pools_title">Pools</string>
