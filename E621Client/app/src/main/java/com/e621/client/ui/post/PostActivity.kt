@@ -39,6 +39,8 @@ import androidx.viewpager2.widget.ViewPager2
 import com.e621.client.E621Application
 import com.e621.client.R
 import com.e621.client.data.model.Post
+import com.e621.client.data.api.CloudFlareException
+import com.e621.client.data.api.ServerDownException
 import com.e621.client.ui.comments.CommentsActivity
 import com.e621.client.ui.pools.PoolViewActivity
 import com.e621.client.ui.profile.ProfileActivity
@@ -46,8 +48,10 @@ import com.e621.client.ui.wiki.WikiActivity
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import com.e621.client.data.api.CloudFlareException
-import com.e621.client.data.api.ServerDownException
+import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.WorkManager
+import androidx.work.workDataOf
+import com.e621.client.worker.DownloadWorker
 import com.e621.client.data.api.NetworkException
 import com.e621.client.data.api.NetworkErrorType
 import java.io.File
@@ -93,18 +97,16 @@ class PostActivity : AppCompatActivity(), PostViewPagerAdapter.PostInteractionLi
     private var uiHidden = false
     private var pendingFollowTag: String? = null
     
-    // Download state management
-    private var isDownloading = false
-    private var currentDownloadId: Long = -1
-    private val activeDownloads = mutableMapOf<Long, Int>() // downloadId -> postId
-    private val completedDownloads = mutableSetOf<Int>() // Track completed postIds to prevent progress updates overwriting complete notification
-    private var downloadReceiver: BroadcastReceiver? = null
-    private val notificationManager by lazy { getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager }
+
+
     private val mainHandler = Handler(Looper.getMainLooper())
     
+    // Debounce for clicks
+    private var lastClickTime: Long = 0
+    private val CLICK_DEBOUNCE = 1000L
+    
     companion object {
-        private const val DOWNLOAD_CHANNEL_ID = "download_channel"
-        private const val DOWNLOAD_NOTIFICATION_ID = 9001
+
         private const val REQUEST_EDIT_POST = 3
         var POSTS_TO_SHOW: List<Post>? = null
         const val EXTRA_POSITION = "position"
@@ -114,6 +116,13 @@ class PostActivity : AppCompatActivity(), PostViewPagerAdapter.PostInteractionLi
     
     private val prefs by lazy { E621Application.instance.userPreferences }
     private val api by lazy { E621Application.instance.api }
+
+    private fun isSafeClick(): Boolean {
+        val now = android.os.SystemClock.elapsedRealtime()
+        if (now - lastClickTime < CLICK_DEBOUNCE) return false
+        lastClickTime = now
+        return true
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -527,12 +536,7 @@ class PostActivity : AppCompatActivity(), PostViewPagerAdapter.PostInteractionLi
             return
         }
         
-        // Prevent multiple clicks while downloading
-        if (isDownloading) {
-            Toast.makeText(this, R.string.download_in_progress, Toast.LENGTH_SHORT).show()
-            return
-        }
-        
+
         // Check notification permission for Android 13+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) 
@@ -557,16 +561,7 @@ class PostActivity : AppCompatActivity(), PostViewPagerAdapter.PostInteractionLi
         val url = post.file.url ?: return
         val fileName = generateFileName(post)
         
-        Log.d("E621Download", "Starting download: $url")
-        Log.d("E621Download", "Filename: $fileName")
-        
-        // Mark as downloading immediately
-        isDownloading = true
-        btnDownload.isEnabled = false
-        btnDownload.alpha = 0.5f
-        
-        // Show immediate feedback
-        Toast.makeText(this, getString(R.string.downloading_post, post.id), Toast.LENGTH_SHORT).show()
+        Log.d("E621Download", "Starting download via WorkManager: $url")
         
         // Auto-actions on download if preferences enabled
         if (prefs.isLoggedIn) {
@@ -595,30 +590,25 @@ class PostActivity : AppCompatActivity(), PostViewPagerAdapter.PostInteractionLi
             }
         }
         
-        // Create notification channel and show immediate notification
-        createDownloadNotificationChannel()
-        showDownloadStartNotification(post.id, fileName)
+        // Enqueue WorkManager task
+        val data = workDataOf(
+            DownloadWorker.KEY_URL to url,
+            DownloadWorker.KEY_FILE_NAME to fileName,
+            DownloadWorker.KEY_POST_ID to post.id,
+            DownloadWorker.KEY_TITLE to getString(R.string.downloading_post, post.id)
+        )
         
-        // Register receiver if not already registered
-        registerDownloadReceiver()
+        val downloadRequest = OneTimeWorkRequestBuilder<DownloadWorker>()
+            .setInputData(data)
+            .addTag("download_${post.id}")
+            .build()
+            
+        WorkManager.getInstance(this).enqueue(downloadRequest)
         
-        // Use coroutine for immediate download - more reliable than DownloadManager for e621
-        performDirectDownload(url, fileName, post)
+        Toast.makeText(this, getString(R.string.downloading_post, post.id), Toast.LENGTH_SHORT).show()
     }
     
-    private fun createDownloadNotificationChannel() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val channel = NotificationChannel(
-                DOWNLOAD_CHANNEL_ID,
-                getString(R.string.download_channel_name),
-                NotificationManager.IMPORTANCE_LOW
-            ).apply {
-                description = getString(R.string.download_channel_description)
-                setShowBadge(false)
-            }
-            notificationManager.createNotificationChannel(channel)
-        }
-    }
+
     
     /**
      * Generate file name based on storage preferences mask
@@ -687,632 +677,13 @@ class PostActivity : AppCompatActivity(), PostViewPagerAdapter.PostInteractionLi
             .take(50) // Limit length
     }
     
-    private fun showDownloadStartNotification(postId: Int, fileName: String) {
-        val notification = NotificationCompat.Builder(this, DOWNLOAD_CHANNEL_ID)
-            .setSmallIcon(android.R.drawable.stat_sys_download)
-            .setContentTitle(getString(R.string.downloading_post, postId))
-            .setContentText(getString(R.string.download_starting))
-            .setProgress(100, 0, true) // Indeterminate progress
-            .setOngoing(true)
-            .setPriority(NotificationCompat.PRIORITY_LOW)
-            .setCategory(NotificationCompat.CATEGORY_PROGRESS)
-            .build()
-        
-        notificationManager.notify(DOWNLOAD_NOTIFICATION_ID + postId, notification)
-    }
+
     
-    private fun showDownloadCompleteNotification(postId: Int, fileName: String, success: Boolean, fileExtension: String? = null) {
-        // Mark download as complete BEFORE showing notification to prevent race condition
-        completedDownloads.add(postId)
-        
-        val builder = NotificationCompat.Builder(this, DOWNLOAD_CHANNEL_ID)
-            .setSmallIcon(if (success) android.R.drawable.stat_sys_download_done else android.R.drawable.stat_notify_error)
-            .setContentTitle(
-                if (success) getString(R.string.download_complete_title)
-                else getString(R.string.download_failed_title)
-            )
-            .setContentText(
-                if (success) getString(R.string.download_complete_post, postId)
-                else getString(R.string.download_failed_post, postId)
-            )
-            .setAutoCancel(true)
-            .setPriority(NotificationCompat.PRIORITY_DEFAULT)
-        
-        // Add click action to open the file in gallery/viewer (only for public storage)
-        if (success && (!prefs.storageCustomFolderEnabled || prefs.storageCustomFolder == null)) {
-            try {
-                val file = getOutputFileForPublicStorage(fileName)
-                
-                if (file.exists()) {
-                    // Get URI using FileProvider for Android 7.0+
-                    val fileUri: Uri = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                        FileProvider.getUriForFile(
-                            this,
-                            "${packageName}.fileprovider",
-                            file
-                        )
-                    } else {
-                        Uri.fromFile(file)
-                    }
-                    
-                    // Determine MIME type
-                    val mimeType = when (fileExtension?.lowercase() ?: fileName.substringAfterLast(".", "").lowercase()) {
-                        "jpg", "jpeg" -> "image/jpeg"
-                        "png" -> "image/png"
-                        "gif" -> "image/gif"
-                        "webp" -> "image/webp"
-                        "webm" -> "video/webm"
-                        "mp4" -> "video/mp4"
-                        else -> "image/*"
-                    }
-                    
-                    // Create intent to open file
-                    val openIntent = Intent(Intent.ACTION_VIEW).apply {
-                        setDataAndType(fileUri, mimeType)
-                        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                    }
-                    
-                    val pendingIntent = PendingIntent.getActivity(
-                        this,
-                        postId,
-                        openIntent,
-                        PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-                    )
-                    
-                    builder.setContentIntent(pendingIntent)
-                    Log.d("E621Download", "Added pending intent to open: $fileUri with type: $mimeType")
-                }
-            } catch (e: Exception) {
-                Log.e("E621Download", "Error creating pending intent: ${e.message}", e)
-            }
-        }
-        
-        notificationManager.notify(DOWNLOAD_NOTIFICATION_ID + postId, builder.build())
-    }
+
     
-    private fun registerDownloadReceiver() {
-        if (downloadReceiver != null) return
-        
-        downloadReceiver = object : BroadcastReceiver() {
-            override fun onReceive(context: Context?, intent: Intent?) {
-                val downloadId = intent?.getLongExtra(DownloadManager.EXTRA_DOWNLOAD_ID, -1) ?: return
-                val postId = activeDownloads[downloadId] ?: return
-                
-                Log.d("E621Download", "Download complete broadcast received for ID: $downloadId, post: $postId")
-                
-                val downloadManager = getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager
-                val query = DownloadManager.Query().setFilterById(downloadId)
-                val cursor = downloadManager.query(query)
-                
-                if (cursor.moveToFirst()) {
-                    val statusIndex = cursor.getColumnIndex(DownloadManager.COLUMN_STATUS)
-                    val status = cursor.getInt(statusIndex)
-                    
-                    when (status) {
-                        DownloadManager.STATUS_SUCCESSFUL -> {
-                            Log.d("E621Download", "Download successful")
-                            showDownloadCompleteNotification(postId, "$postId", true)
-                            Toast.makeText(context, R.string.download_complete, Toast.LENGTH_SHORT).show()
-                        }
-                        DownloadManager.STATUS_FAILED -> {
-                            val reasonIndex = cursor.getColumnIndex(DownloadManager.COLUMN_REASON)
-                            val reason = cursor.getInt(reasonIndex)
-                            Log.e("E621Download", "Download failed with reason: $reason")
-                            showDownloadCompleteNotification(postId, "$postId", false)
-                        }
-                    }
-                }
-                cursor.close()
-                
-                activeDownloads.remove(downloadId)
-                resetDownloadState()
-            }
-        }
-        
-        val filter = IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE)
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            registerReceiver(downloadReceiver, filter, Context.RECEIVER_NOT_EXPORTED)
-        } else {
-            registerReceiver(downloadReceiver, filter)
-        }
-    }
+    // Old download methods removed in favor of WorkManager
     
-    private fun resetDownloadState() {
-        isDownloading = false
-        currentDownloadId = -1
-        // Clean up completed downloads set after a delay to allow notification to be shown
-        mainHandler.postDelayed({
-            completedDownloads.clear()
-        }, 1000)
-        mainHandler.post {
-            btnDownload.isEnabled = true
-            btnDownload.alpha = 1.0f
-        }
-    }
-    
-    private fun performDirectDownload(urlString: String, fileName: String, post: Post) {
-        val fileExtension = post.file.ext
-        val appContext = applicationContext // Capture application context
-        
-        // Use application scope to ensure download continues even if activity is destroyed
-        E621Application.instance.applicationScope.launch {
-            var downloadSuccess = false
-            var lastException: Exception? = null
-            
-            // Retry logic - try up to 3 times
-            for (attempt in 1..3) {
-                try {
-                    Log.d("E621Download", "Download attempt $attempt/3 for post ${post.id}")
-                    
-                    val result = withContext(Dispatchers.IO) {
-                        downloadFileRobust(urlString, fileName, post.id)
-                    }
-                    
-                    if (result) {
-                        downloadSuccess = true
-                        break
-                    } else {
-                        Log.w("E621Download", "Attempt $attempt failed, retrying...")
-                        // Wait before retry (exponential backoff)
-                        if (attempt < 3) {
-                            kotlinx.coroutines.delay(1000L * attempt)
-                        }
-                    }
-                } catch (e: Exception) {
-                    lastException = e
-                    Log.e("E621Download", "Attempt $attempt exception: ${e.message}")
-                    if (attempt < 3) {
-                        kotlinx.coroutines.delay(1000L * attempt)
-                    }
-                }
-            }
-            
-            if (downloadSuccess) {
-                Log.d("E621Download", "Download successful")
-                showDownloadCompleteNotification(post.id, fileName, true, fileExtension)
-                
-                // Safe UI update
-                runOnUiThread {
-                    if (!isFinishing && !isDestroyed) {
-                        Toast.makeText(this@PostActivity, R.string.download_complete, Toast.LENGTH_SHORT).show()
-                    } else {
-                        // Fallback toast on application context if activity is gone
-                        Toast.makeText(appContext, R.string.download_complete, Toast.LENGTH_SHORT).show()
-                    }
-                }
-                
-                // Notify media scanner for non-SAF downloads
-                if (!prefs.storageCustomFolderEnabled || prefs.storageCustomFolder == null) {
-                    try {
-                        val outputFile = getOutputFileForPublicStorage(fileName)
-                        if (outputFile.exists()) {
-                            val uri = Uri.fromFile(outputFile)
-                            appContext.sendBroadcast(Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE, uri))
-                        }
-                    } catch (e: Exception) {
-                        Log.e("E621Download", "Media scanner error: ${e.message}")
-                    }
-                }
-            } else {
-                Log.e("E621Download", "All download attempts failed")
-                showDownloadCompleteNotification(post.id, fileName, false, fileExtension)
-                val errorMsg = lastException?.message ?: getString(R.string.download_failed)
-                
-                // Safe UI update
-                runOnUiThread {
-                    if (!isFinishing && !isDestroyed) {
-                        Toast.makeText(this@PostActivity, errorMsg, Toast.LENGTH_LONG).show()
-                    } else {
-                        Toast.makeText(appContext, errorMsg, Toast.LENGTH_LONG).show()
-                    }
-                }
-            }
-            
-            // Reset state safely
-            runOnUiThread {
-                if (!isFinishing && !isDestroyed) {
-                    resetDownloadState()
-                } else {
-                    // Just clear the set if activity is gone
-                    completedDownloads.remove(post.id) // Remove directly as we can't call resetDownloadState which touches UI
-                }
-            }
-        }
-    }
-    
-    /**
-     * Robust download function with proper SAF support
-     */
-    private fun downloadFileRobust(urlString: String, fileName: String, postId: Int): Boolean {
-        return try {
-            // Create connection with timeout and retries
-            val url = URL(urlString)
-            val connection = (url.openConnection() as HttpURLConnection).apply {
-                requestMethod = "GET"
-                connectTimeout = 30000  // 30 seconds
-                readTimeout = 60000     // 60 seconds for large files
-                instanceFollowRedirects = true
-                useCaches = false
-                setRequestProperty("User-Agent", "E621Client/1.0 (by e621_client on e621)")
-                setRequestProperty("Accept", "*/*")
-                setRequestProperty("Connection", "keep-alive")
-                
-                if (prefs.isLoggedIn) {
-                    val credentials = "${prefs.username}:${prefs.apiKey}"
-                    val basicAuth = "Basic " + android.util.Base64.encodeToString(
-                        credentials.toByteArray(), android.util.Base64.NO_WRAP
-                    )
-                    setRequestProperty("Authorization", basicAuth)
-                }
-            }
-            
-            connection.connect()
-            val responseCode = connection.responseCode
-            Log.d("E621Download", "HTTP response: $responseCode")
-            
-            if (responseCode != HttpURLConnection.HTTP_OK) {
-                Log.e("E621Download", "HTTP error: $responseCode - ${connection.responseMessage}")
-                connection.disconnect()
-                return false
-            }
-            
-            val totalSize = connection.contentLengthLong
-            Log.d("E621Download", "File size: $totalSize bytes")
-            
-            // Determine if using SAF or public storage
-            val useCustomFolder = prefs.storageCustomFolderEnabled && prefs.storageCustomFolder != null
-            
-            val downloadResult = if (useCustomFolder) {
-                downloadToCustomFolder(connection.inputStream, fileName, postId, totalSize)
-            } else {
-                downloadToPublicStorage(connection.inputStream, fileName, postId, totalSize)
-            }
-            
-            connection.disconnect()
-            downloadResult
-            
-        } catch (e: java.net.SocketTimeoutException) {
-            Log.e("E621Download", "Connection timeout: ${e.message}")
-            false
-        } catch (e: java.net.UnknownHostException) {
-            Log.e("E621Download", "Network error: ${e.message}")
-            false
-        } catch (e: java.io.IOException) {
-            Log.e("E621Download", "IO error: ${e.message}")
-            false
-        } catch (e: Exception) {
-            Log.e("E621Download", "Download exception: ${e.message}", e)
-            false
-        }
-    }
-    
-    /**
-     * Download to custom folder using SAF (Storage Access Framework)
-     */
-    private fun downloadToCustomFolder(
-        inputStream: java.io.InputStream,
-        fileName: String,
-        postId: Int,
-        totalSize: Long
-    ): Boolean {
-        return try {
-            val customUri = android.net.Uri.parse(prefs.storageCustomFolder)
-            var targetDir = androidx.documentfile.provider.DocumentFile.fromTreeUri(this, customUri)
-            
-            if (targetDir == null || !targetDir.canWrite()) {
-                Log.e("E621Download", "Cannot write to custom folder, falling back to public storage")
-                // Fallback to public storage
-                return downloadToPublicStorage(inputStream, fileName, postId, totalSize)
-            }
-            
-            // Handle subfolders in filename
-            val parts = fileName.split("/")
-            val actualFileName = parts.last()
-            
-            if (parts.size > 1) {
-                // Create subfolders
-                for (i in 0 until parts.size - 1) {
-                    val folderName = parts[i]
-                    val existingDir = targetDir?.findFile(folderName)
-                    targetDir = if (existingDir != null && existingDir.isDirectory) {
-                        existingDir
-                    } else {
-                        targetDir?.createDirectory(folderName) ?: run {
-                            Log.e("E621Download", "Failed to create subfolder: $folderName")
-                            return downloadToPublicStorage(inputStream, fileName, postId, totalSize)
-                        }
-                    }
-                }
-            }
-            
-            // Check for existing file
-            val existingFile = targetDir?.findFile(actualFileName)
-            if (existingFile != null) {
-                if (!prefs.storageOverwrite) {
-                    Log.d("E621Download", "File exists and overwrite disabled")
-                    inputStream.close()
-                    return true
-                }
-                existingFile.delete()
-            }
-            
-            // Determine MIME type
-            val extension = actualFileName.substringAfterLast(".", "").lowercase()
-            val mimeType = when (extension) {
-                "jpg", "jpeg" -> "image/jpeg"
-                "png" -> "image/png"
-                "gif" -> "image/gif"
-                "webp" -> "image/webp"
-                "webm" -> "video/webm"
-                "mp4" -> "video/mp4"
-                else -> "application/octet-stream"
-            }
-            
-            // Create file in custom folder
-            val newFile = targetDir?.createFile(mimeType, actualFileName.substringBeforeLast("."))
-            if (newFile == null) {
-                Log.e("E621Download", "Failed to create file in custom folder")
-                return downloadToPublicStorage(inputStream, fileName, postId, totalSize)
-            }
-            
-            // Write using ContentResolver for SAF
-            val outputStream = contentResolver.openOutputStream(newFile.uri)
-            if (outputStream == null) {
-                Log.e("E621Download", "Failed to open output stream for SAF")
-                newFile.delete()
-                return downloadToPublicStorage(inputStream, fileName, postId, totalSize)
-            }
-            
-            // Copy with progress
-            val success = copyStreamWithProgress(inputStream, outputStream, postId, totalSize)
-            
-            if (success) {
-                Log.d("E621Download", "SAF download complete: ${newFile.uri}")
-            } else {
-                newFile.delete()
-            }
-            
-            success
-            
-        } catch (e: Exception) {
-            Log.e("E621Download", "SAF download error: ${e.message}", e)
-            // Try fallback
-            try {
-                downloadToPublicStorage(inputStream, fileName, postId, totalSize)
-            } catch (e2: Exception) {
-                false
-            }
-        }
-    }
-    
-    /**
-     * Download to public Downloads/E621 folder
-     */
-    private fun downloadToPublicStorage(
-        inputStream: java.io.InputStream,
-        fileName: String,
-        postId: Int,
-        totalSize: Long
-    ): Boolean {
-        return try {
-            val outputFile = getOutputFileForPublicStorage(fileName)
-            
-            // Check overwrite preference
-            if (outputFile.exists() && !prefs.storageOverwrite) {
-                Log.d("E621Download", "File exists and overwrite disabled")
-                inputStream.close()
-                return true
-            }
-            
-            // Create parent directories
-            outputFile.parentFile?.mkdirs()
-            
-            val outputStream = FileOutputStream(outputFile)
-            val success = copyStreamWithProgress(inputStream, outputStream, postId, totalSize)
-            
-            if (success) {
-                Log.d("E621Download", "Public storage download complete: ${outputFile.absolutePath}")
-            } else {
-                outputFile.delete()
-            }
-            
-            success
-            
-        } catch (e: Exception) {
-            Log.e("E621Download", "Public storage download error: ${e.message}", e)
-            false
-        }
-    }
-    
-    /**
-     * Copy stream with progress updates showing MB downloaded/total
-     */
-    private fun copyStreamWithProgress(
-        input: java.io.InputStream,
-        output: java.io.OutputStream,
-        postId: Int,
-        totalSize: Long
-    ): Boolean {
-        return try {
-            var downloadedSize = 0L
-            var lastUpdateTime = System.currentTimeMillis()
-            val buffer = ByteArray(16384) // 16KB buffer for better performance
-            var bytesRead: Int
-            
-            input.use { inputStream ->
-                output.use { outputStream ->
-                    while (inputStream.read(buffer).also { bytesRead = it } != -1) {
-                        outputStream.write(buffer, 0, bytesRead)
-                        downloadedSize += bytesRead
-                        
-                        // Update progress every 100ms for smooth updates
-                        val now = System.currentTimeMillis()
-                        if (now - lastUpdateTime >= 100) {
-                            lastUpdateTime = now
-                            updateDownloadProgressDetailed(postId, downloadedSize, totalSize)
-                        }
-                    }
-                    outputStream.flush()
-                }
-            }
-            
-            // Final progress update
-            // updateDownloadProgressDetailed(postId, downloadedSize, totalSize) // Removed to prevent race condition with complete notification
-            
-            // Verify downloaded size matches expected
-            if (totalSize > 0 && downloadedSize != totalSize) {
-                Log.w("E621Download", "Size mismatch: expected $totalSize, got $downloadedSize")
-                // Still consider it success if we got data
-                downloadedSize > 0
-            } else {
-                true
-            }
-            
-        } catch (e: Exception) {
-            Log.e("E621Download", "Stream copy error: ${e.message}", e)
-            false
-        }
-    }
-    
-    /**
-     * Get file path for public storage downloads
-     */
-    private fun getOutputFileForPublicStorage(fileName: String): File {
-        val parts = fileName.split("/")
-        val actualFileName = parts.last()
-        val subfolders = if (parts.size > 1) parts.dropLast(1).joinToString("/") else null
-        
-        val downloadDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
-        val baseDir = File(downloadDir, "E621")
-        
-        val targetDir = if (subfolders != null) {
-            File(baseDir, subfolders)
-        } else {
-            baseDir
-        }
-        
-        if (!targetDir.exists()) {
-            targetDir.mkdirs()
-        }
-        
-        return File(targetDir, actualFileName)
-    }
-    
-    private fun updateDownloadProgress(postId: Int, progress: Int) {
-        mainHandler.post {
-            val notification = NotificationCompat.Builder(this, DOWNLOAD_CHANNEL_ID)
-                .setSmallIcon(android.R.drawable.stat_sys_download)
-                .setContentTitle(getString(R.string.app_name))
-                .setContentText("$progress%")
-                .setProgress(100, progress, false)
-                .setOngoing(true)
-                .setPriority(NotificationCompat.PRIORITY_LOW)
-                .build()
-            
-            notificationManager.notify(DOWNLOAD_NOTIFICATION_ID + postId, notification)
-        }
-    }
-    
-    /**
-     * Update download progress with detailed MB information
-     */
-    private fun updateDownloadProgressDetailed(postId: Int, downloadedBytes: Long, totalBytes: Long) {
-        mainHandler.post {
-            // Don't update if download is already marked as complete (prevents race condition)
-            if (completedDownloads.contains(postId)) {
-                return@post
-            }
-            
-            val downloadedMB = downloadedBytes / (1024.0 * 1024.0)
-            val totalMB = totalBytes / (1024.0 * 1024.0)
-            val progress = if (totalBytes > 0) ((downloadedBytes * 100) / totalBytes).toInt() else 0
-            
-            val progressText = if (totalBytes > 0) {
-                String.format("%.1f MB / %.1f MB (%d%%)", downloadedMB, totalMB, progress)
-            } else {
-                String.format("%.1f MB", downloadedMB)
-            }
-            
-            val notification = NotificationCompat.Builder(this, DOWNLOAD_CHANNEL_ID)
-                .setSmallIcon(android.R.drawable.stat_sys_download)
-                .setContentTitle(getString(R.string.downloading_post, postId))
-                .setContentText(progressText)
-                .setProgress(100, progress, totalBytes <= 0)
-                .setOngoing(true)
-                .setPriority(NotificationCompat.PRIORITY_LOW)
-                .setCategory(NotificationCompat.CATEGORY_PROGRESS)
-                .build()
-            
-            notificationManager.notify(DOWNLOAD_NOTIFICATION_ID + postId, notification)
-        }
-    }
-    
-    private fun tryDownloadManagerFallback(url: String, fileName: String, post: Post): Boolean {
-        return try {
-            val downloadManager = getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager
-            
-            // Parse the URL
-            val downloadUri = Uri.parse(url)
-            Log.d("E621Download", "Download URI: $downloadUri")
-            
-            val request = DownloadManager.Request(downloadUri).apply {
-                // Add required User-Agent header for e621
-                addRequestHeader("User-Agent", "E621Client/1.0 (by e621_client on e621)")
-                
-                // Add auth headers if logged in
-                if (prefs.isLoggedIn) {
-                    val credentials = "${prefs.username}:${prefs.apiKey}"
-                    val basicAuth = "Basic " + android.util.Base64.encodeToString(
-                        credentials.toByteArray(), android.util.Base64.NO_WRAP
-                    )
-                    addRequestHeader("Authorization", basicAuth)
-                }
-                
-                // Set destination to Downloads/E621/
-                setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, "E621/$fileName")
-                
-                // Set notification visibility
-                setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
-                
-                // Set title and description
-                setTitle("E621 - $fileName")
-                setDescription(getString(R.string.downloading_post, post.id))
-                
-                // Set MIME type
-                val mimeType = when (post.file.ext?.lowercase()) {
-                    "jpg", "jpeg" -> "image/jpeg"
-                    "png" -> "image/png"
-                    "gif" -> "image/gif"
-                    "webm" -> "video/webm"
-                    "mp4" -> "video/mp4"
-                    "webp" -> "image/webp"
-                    else -> "application/octet-stream"
-                }
-                setMimeType(mimeType)
-                
-                // Network settings
-                setAllowedNetworkTypes(DownloadManager.Request.NETWORK_WIFI or DownloadManager.Request.NETWORK_MOBILE)
-                setAllowedOverMetered(true)
-                setAllowedOverRoaming(true)
-            }
-            
-            val downloadId = downloadManager.enqueue(request)
-            Log.d("E621Download", "DownloadManager enqueued, ID: $downloadId")
-            
-            if (downloadId > 0) {
-                currentDownloadId = downloadId
-                activeDownloads[downloadId] = post.id
-                true
-            } else {
-                Log.e("E621Download", "DownloadManager returned invalid ID")
-                false
-            }
-        } catch (e: Exception) {
-            Log.e("E621Download", "DownloadManager error: ${e.message}", e)
-            false
-        }
-    }
+
     
     // Permission launchers
     private val notificationPermissionLauncher = registerForActivityResult(
@@ -1854,12 +1225,14 @@ class PostActivity : AppCompatActivity(), PostViewPagerAdapter.PostInteractionLi
     }
     
     override fun onParentClicked(parentId: Int) {
+        if (!isSafeClick()) return
         val intent = Intent(this, PostActivity::class.java)
         intent.putExtra(EXTRA_POST_ID, parentId)
         startActivity(intent)
     }
     
     override fun onChildrenClicked(parentId: Int, clickedChildId: Int) {
+        if (!isSafeClick()) return
         // Search for children: parent:parentId - stay in PostActivity flow
         lifecycleScope.launch {
             try {
@@ -1888,6 +1261,7 @@ class PostActivity : AppCompatActivity(), PostViewPagerAdapter.PostInteractionLi
     }
     
     override fun onPoolClicked(poolId: Int) {
+        if (!isSafeClick()) return
         // Get current post to check all pools
         val currentPost = posts.getOrNull(viewPager.currentItem)
         val poolsList = currentPost?.pools ?: listOf(poolId)
@@ -2011,16 +1385,7 @@ class PostActivity : AppCompatActivity(), PostViewPagerAdapter.PostInteractionLi
             adapter.releaseAllPlayers()
         }
         
-        // Unregister download receiver
-        downloadReceiver?.let {
-            try {
-                unregisterReceiver(it)
-            } catch (e: Exception) {
-                Log.w("E621Download", "Receiver not registered: ${e.message}")
-            }
-        }
-        downloadReceiver = null
-        
+
         if (!prefs.postKeepScreenAwake) {
             window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         }

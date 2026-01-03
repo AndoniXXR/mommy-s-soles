@@ -727,7 +727,31 @@ class PostViewPagerAdapter(
                 // Parent: "Padre: ID"
                 if (hasParent) {
                     txtParent.visibility = View.VISIBLE
-                    txtParent.text = itemView.context.getString(R.string.post_parent, post.relationships.parentId.toString())
+                    val parentIdStr = post.relationships.parentId.toString()
+                    val fullText = itemView.context.getString(R.string.post_parent, parentIdStr)
+                    val sb = android.text.SpannableStringBuilder(fullText)
+                    
+                    val start = fullText.indexOf(parentIdStr)
+                    if (start != -1) {
+                        val end = start + parentIdStr.length
+                        // Label Red
+                        sb.setSpan(android.text.style.ForegroundColorSpan(android.graphics.Color.parseColor("#FF5555")), 0, start, android.text.Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+                        // ID Blue (Accent) like children
+                        sb.setSpan(android.text.style.ForegroundColorSpan(itemView.context.getColor(R.color.accent)), start, end, android.text.Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+                    } else {
+                        // Fallback
+                        sb.setSpan(android.text.style.ForegroundColorSpan(android.graphics.Color.parseColor("#FF5555")), 0, fullText.length, android.text.Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+                    }
+                    
+                    txtParent.text = sb
+                    
+                    // Add visual feedback (Ripple)
+                    val outValue = android.util.TypedValue()
+                    itemView.context.theme.resolveAttribute(android.R.attr.selectableItemBackground, outValue, true)
+                    txtParent.setBackgroundResource(outValue.resourceId)
+                    txtParent.isClickable = true
+                    txtParent.isFocusable = true
+                    
                     txtParent.setOnClickListener {
                         post.relationships.parentId?.let { onPostInteraction.onParentClicked(it) }
                     }
@@ -785,6 +809,14 @@ class PostViewPagerAdapter(
                     val poolIds = post.pools!!.joinToString(", ")
                     val pluralRes = if (post.pools!!.size == 1) R.string.post_pool else R.string.post_pools_plural
                     txtPool.text = itemView.context.getString(pluralRes, poolIds)
+                    
+                    // Add visual feedback (Ripple)
+                    val outValue = android.util.TypedValue()
+                    itemView.context.theme.resolveAttribute(android.R.attr.selectableItemBackground, outValue, true)
+                    txtPool.setBackgroundResource(outValue.resourceId)
+                    txtPool.isClickable = true
+                    txtPool.isFocusable = true
+                    
                     txtPool.setOnClickListener {
                         post.pools?.firstOrNull()?.let { onPostInteraction.onPoolClicked(it) }
                     }

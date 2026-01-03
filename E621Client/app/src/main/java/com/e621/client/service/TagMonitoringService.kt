@@ -74,14 +74,23 @@ class TagMonitoringService : Service() {
         super.onCreate()
         Log.d(TAG, "Service created")
         createNotificationChannel()
-        startForeground(NOTIFICATION_ID, createForegroundNotification())
+        try {
+            startForeground(NOTIFICATION_ID, createForegroundNotification())
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to start foreground service", e)
+            stopSelf()
+        }
         startMonitoring()
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         Log.d(TAG, "Service started")
         // Ensure we are in foreground
-        startForeground(NOTIFICATION_ID, createForegroundNotification())
+        try {
+            startForeground(NOTIFICATION_ID, createForegroundNotification())
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to start foreground service in onStartCommand", e)
+        }
         
         if (monitoringJob == null || !monitoringJob!!.isActive) {
             startMonitoring()
