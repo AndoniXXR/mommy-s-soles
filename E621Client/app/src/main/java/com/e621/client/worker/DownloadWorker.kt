@@ -161,6 +161,17 @@ class DownloadWorker(
             
             // Final success notification
             val mimeType = getMimeType(fileName)
+            
+            // Scan file to make it visible in Gallery/Downloads
+            if (tempFile != null) {
+                android.media.MediaScannerConnection.scanFile(
+                    applicationContext,
+                    arrayOf(tempFile.absolutePath),
+                    arrayOf(mimeType),
+                    null
+                )
+            }
+            
             showSuccessNotification(resultNotificationId, postId, finalUri, mimeType)
             
         } catch (e: Exception) {
