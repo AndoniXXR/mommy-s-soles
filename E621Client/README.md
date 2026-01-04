@@ -41,7 +41,21 @@ An unofficial Android client for e621.net and e926.net image boards. This applic
 - PIN code lock for privacy
 - Auto-update checker with in-app installation
 
-## Recent Updates (v1.1.0)
+## Recent Updates (v1.1.3)
+
+### 🚀 New Features
+- **Automatic Update Checker:** Daily background check for new versions using WorkManager. Shows notification when update is available.
+- **Children Posts Dialog:** Complete redesign of children posts viewing. Shows all children (up to 320) with visual selection feedback.
+- **Improved Downloads:** Fixed MediaStore integration for better file scanning and gallery visibility.
+- **Dynamic Pagination:** Improved page count calculation based on actual post count.
+- **Multi-tag Search Suggestions:** Better autocomplete when searching with multiple tags.
+
+### 🐛 Bug Fixes
+- **Children Display:** Fixed issue where only partial children were shown. Now fetches complete list via parent search.
+- **Download Path:** Fixed file path display and scanning issues on Android 10+.
+- **Pagination:** Fixed incorrect page count when browsing large result sets.
+
+## Previous Updates (v1.1.0)
 
 ### 🚀 New Features
 - **Instant Tag Monitoring:** Added a new "Instant (Beta)" option for followed tags. Checks for new posts every 30 seconds using a robust foreground service.
@@ -69,16 +83,75 @@ An unofficial Android client for e621.net and e926.net image boards. This applic
 3. Install the APK
 
 ### Building from Source
-1. Clone this repository
-2. Open the project in Android Studio
-3. Sync Gradle files
-4. Build and run on your device or emulator
 
-```bash
-git clone https://github.com/AndoniXXR/mommy-s-soles.git
-cd mommy-s-soles
-./gradlew assembleDebug
-```
+#### Prerequisites
+- **JDK 17** or higher (recommended: Oracle JDK 17 or OpenJDK 17)
+- **Android Studio** Hedgehog (2023.1.1) or newer
+- **Android SDK** with:
+  - SDK Platform 34 (Android 14)
+  - Build Tools 34.0.0
+  - NDK (optional, for native libs)
+- **Gradle 8.11.1** (bundled with project via wrapper)
+
+#### Environment Setup
+
+1. **Install JDK 17:**
+   ```bash
+   # Windows (using winget)
+   winget install Oracle.JDK.17
+   
+   # macOS (using Homebrew)
+   brew install openjdk@17
+   
+   # Linux (Ubuntu/Debian)
+   sudo apt install openjdk-17-jdk
+   ```
+
+2. **Install Android Studio:**
+   - Download from https://developer.android.com/studio
+   - During setup, install Android SDK 34 and Build Tools
+
+3. **Set Environment Variables:**
+   ```bash
+   # Windows (PowerShell)
+   $env:ANDROID_HOME = "$env:LOCALAPPDATA\Android\Sdk"
+   $env:JAVA_HOME = "C:\Program Files\Java\jdk-17"
+   
+   # macOS/Linux
+   export ANDROID_HOME=$HOME/Android/Sdk
+   export JAVA_HOME=/usr/lib/jvm/java-17-openjdk
+   ```
+
+#### Build Steps
+
+1. Clone this repository:
+   ```bash
+   git clone https://github.com/AndoniXXR/mommy-s-soles.git
+   cd mommy-s-soles/E621Client
+   ```
+
+2. Build debug APK:
+   ```bash
+   # Windows
+   .\gradlew.bat assembleDebug
+   
+   # macOS/Linux
+   ./gradlew assembleDebug
+   ```
+
+3. The APK will be generated at:
+   ```
+   app/build/outputs/apk/debug/app-debug.apk
+   ```
+
+4. Install on device/emulator:
+   ```bash
+   adb install -r app/build/outputs/apk/debug/app-debug.apk
+   ```
+
+#### Build Variants
+- `debug` - Development build with debugging enabled
+- `release` - Production build (requires signing configuration)
 
 ## Configuration
 
@@ -128,13 +201,41 @@ app/
 
 ## Tech Stack
 
-- **Language**: Kotlin
-- **UI**: Android Views + Jetpack Compose (hybrid)
-- **Networking**: OkHttp + Retrofit
-- **Image Loading**: Coil
-- **Video Playback**: ExoPlayer (Media3)
-- **Background Tasks**: WorkManager
-- **Architecture**: MVVM-inspired with coroutines
+- **Language**: Kotlin 2.0.21
+- **Min SDK**: Android 7.0 (API 24)
+- **Target SDK**: Android 14 (API 34)
+- **UI**: Android Views + Data Binding
+- **Networking**: OkHttp 4.12.0 + Retrofit 2.9.0
+- **Image Loading**: Coil 2.5.0
+- **Video Playback**: ExoPlayer (Media3) 1.5.1
+- **Background Tasks**: WorkManager 2.9.0
+- **Authentication**: Biometric API 1.4.0-alpha02
+- **Architecture**: MVVM-inspired with Kotlin Coroutines
+
+### Key Dependencies
+```kotlin
+// Networking
+implementation("com.squareup.okhttp3:okhttp:4.12.0")
+implementation("com.squareup.retrofit2:retrofit:2.9.0")
+implementation("com.squareup.retrofit2:converter-gson:2.9.0")
+
+// Image Loading
+implementation("io.coil-kt:coil:2.5.0")
+implementation("io.coil-kt:coil-gif:2.5.0")
+implementation("io.coil-kt:coil-video:2.5.0")
+
+// Video Playback
+implementation("androidx.media3:media3-exoplayer:1.5.1")
+implementation("androidx.media3:media3-ui:1.5.1")
+
+// Background Work
+implementation("androidx.work:work-runtime-ktx:2.9.0")
+
+// UI Components
+implementation("com.google.android.material:material:1.11.0")
+implementation("androidx.swiperefreshlayout:swiperefreshlayout:1.1.0")
+implementation("com.github.chrisbanes:PhotoView:2.3.0")
+```
 
 ## API Reference
 
@@ -158,6 +259,18 @@ This is an unofficial client and is not affiliated with or endorsed by e621.net.
 Contributions are welcome. Please open an issue or submit a pull request.
 
 ## Version History
+
+- **1.1.3** - Children posts & auto-updates
+  - Automatic daily update checking with notifications
+  - Complete children posts dialog with visual feedback
+  - Fixed downloads and MediaStore integration
+  - Improved pagination and search suggestions
+
+- **1.1.0** - Instant monitoring & UX improvements
+  - Instant tag monitoring (30 second intervals)
+  - Custom notification sounds
+  - Fullscreen zoom and double-tap gestures
+  - Biometric unlock fixes
 
 - **1.0.0** - Initial release
   - Full browsing and search functionality

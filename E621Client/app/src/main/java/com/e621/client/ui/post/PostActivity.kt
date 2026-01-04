@@ -1263,17 +1263,53 @@ class PostActivity : AppCompatActivity(), PostViewPagerAdapter.PostInteractionLi
         // Create array of child IDs as strings for the dialog
         val childIds = children.map { "#${it.id}" }.toTypedArray()
         
-        AlertDialog.Builder(this, R.style.Theme_E621Client_AlertDialog)
+        // Create custom layout with message + list
+        val container = android.widget.LinearLayout(this).apply {
+            orientation = android.widget.LinearLayout.VERTICAL
+            setPadding(48, 32, 48, 0)
+        }
+        
+        val messageView = android.widget.TextView(this).apply {
+            text = "Tap on a child post to view it"
+            setTextColor(resources.getColor(R.color.text_secondary, theme))
+            setPadding(0, 0, 0, 24)
+        }
+        container.addView(messageView)
+        
+        val listView = android.widget.ListView(this).apply {
+            adapter = android.widget.ArrayAdapter(
+                this@PostActivity,
+                android.R.layout.simple_list_item_1,
+                childIds
+            )
+            // Enable selection feedback
+            choiceMode = android.widget.ListView.CHOICE_MODE_SINGLE
+            selector = android.graphics.drawable.ColorDrawable(
+                resources.getColor(R.color.colorPrimary, theme)
+            )
+        }
+        container.addView(listView)
+        
+        val dialog = AlertDialog.Builder(this, R.style.Theme_E621Client_AlertDialog)
             .setTitle("Children Posts")
-            .setMessage("Tap on a child post to view it")
-            .setItems(childIds) { _, which ->
-                // Open the selected child post
-                val intent = Intent(this, PostActivity::class.java)
-                intent.putExtra(EXTRA_POST_ID, children[which].id)
-                startActivity(intent)
-            }
+            .setView(container)
             .setNegativeButton(android.R.string.cancel, null)
-            .show()
+            .create()
+        
+        listView.setOnItemClickListener { _, view, position, _ ->
+            // Visual feedback - highlight the selected item
+            view.setBackgroundColor(resources.getColor(R.color.colorPrimary, theme))
+            
+            // Short delay to show the selection before navigating
+            view.postDelayed({
+                dialog.dismiss()
+                val intent = Intent(this, PostActivity::class.java)
+                intent.putExtra(EXTRA_POST_ID, children[position].id)
+                startActivity(intent)
+            }, 150)
+        }
+        
+        dialog.show()
     }
     
     override fun onPoolClicked(poolId: Int) {
