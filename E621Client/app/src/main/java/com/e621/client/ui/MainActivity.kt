@@ -9,6 +9,8 @@ import android.util.Log
 import android.view.View
 import android.view.ViewConfiguration
 import android.view.inputmethod.EditorInfo
+import android.view.inputmethod.InputMethodManager
+import android.content.Context
 import android.widget.AutoCompleteTextView
 import android.widget.EditText
 import android.widget.ImageButton
@@ -87,6 +89,12 @@ class MainActivity : BaseActivity(), PostPageAdapter.OnPostClickListener {
     private var currentTags = ""
     private var searchJob: Job? = null
     
+    // Stack to track search history for back navigation (tags + page)
+    private val searchStack = java.util.Stack<Pair<String, Int>>()
+    
+    // Flag to prevent dropdown from opening during back navigation
+    private var isNavigatingBack = false
+    
     // ActivityResultLauncher for PostActivity
     private lateinit var postActivityLauncher: ActivityResultLauncher<Intent>
     
@@ -120,6 +128,11 @@ class MainActivity : BaseActivity(), PostPageAdapter.OnPostClickListener {
         intent.getStringExtra("search_query")?.let { query ->
             currentTags = query
         }
+        
+        // Restore last search state if no intent extras
+        if (intent.getStringExtra("search_query") == null && intent.getStringExtra("search_tag") == null) {
+            restoreSearchState()
+        }
     }
     
     override fun onNewIntent(intent: Intent) {
@@ -127,6 +140,41 @@ class MainActivity : BaseActivity(), PostPageAdapter.OnPostClickListener {
         setIntent(intent)
         // Handle notification tap when app is already running
         handleNotificationIntent(intent)
+    }
+    
+    override fun onStop() {
+        super.onStop()
+        // Save current search state when app goes to background
+        prefs.saveSearchState(currentTags, viewPager.currentItem)
+    }
+    
+    /**
+     * Restore the last search state from preferences
+     */
+    private fun restoreSearchState() {
+        val lastSearch = prefs.lastSearch ?: ""
+        val lastPage = prefs.lastSearchPage
+        
+        if (lastSearch.isNotEmpty() || lastPage > 0) {
+            currentTags = lastSearch
+            pageAdapter.setTags(lastSearch)
+            viewPager.adapter = null
+            viewPager.adapter = pageAdapter
+            
+            // Navigate to last page after adapter is set
+            if (lastPage > 0) {
+                viewPager.post {
+                    viewPager.setCurrentItem(lastPage, false)
+                    updatePageIndicator(lastPage + 1)
+                }
+            }
+            
+            // Update search view to show current tags
+            if (lastSearch.isNotEmpty()) {
+                searchView.setQuery(lastSearch, false)
+                searchView.clearFocus()
+            }
+        }
     }
     
     private fun handleNotificationIntent(intent: Intent?) {
@@ -676,10 +724,11 @@ class MainActivity : BaseActivity(), PostPageAdapter.OnPostClickListener {
             showMainMenu()
         }
         
-        // Search button - focus search view and show keyboard
+        // Search button - always execute search (empty = go to page 1)
         btnSearch.setOnClickListener {
-            searchView.isIconified = false
-            searchView.requestFocus()
+            val query = searchView.query?.toString()?.trim() ?: ""
+            searchView.clearFocus()
+            performSearch(query)
         }
     }
     
@@ -691,6 +740,17 @@ class MainActivity : BaseActivity(), PostPageAdapter.OnPostClickListener {
         
         // Configure AutoCompleteTextView to show suggestions immediately
         searchAutoComplete?.threshold = 0  // Show dropdown with 0 characters
+        
+        // Handle Enter key to execute search even when empty
+        searchAutoComplete?.setOnEditorActionListener { _, actionId, _ ->
+            if (actionId == EditorInfo.IME_ACTION_SEARCH || actionId == EditorInfo.IME_ACTION_DONE || actionId == EditorInfo.IME_ACTION_GO) {
+                val query = searchView.query?.toString()?.trim() ?: ""
+                performSearch(query)
+                true
+            } else {
+                false
+            }
+        }
         
         // Setup suggestions adapter with custom layout and icon binding
         val from = arrayOf("suggest_text", "suggest_info", "suggest_icon")
@@ -754,16 +814,6 @@ class MainActivity : BaseActivity(), PostPageAdapter.OnPostClickListener {
             }
         })
         
-        // Handle keyboard enter/search action
-        searchAutoComplete?.setOnEditorActionListener { _, actionId, _ ->
-            if (actionId == EditorInfo.IME_ACTION_SEARCH || actionId == EditorInfo.IME_ACTION_DONE) {
-                performSearch(searchView.query?.toString()?.trim() ?: "")
-                true
-            } else {
-                false
-            }
-        }
-        
         searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
             override fun onQueryTextSubmit(query: String?): Boolean {
                 performSearch(query?.trim() ?: "")
@@ -793,13 +843,15 @@ class MainActivity : BaseActivity(), PostPageAdapter.OnPostClickListener {
         
         // Show history when search view is focused
         searchAutoComplete?.setOnFocusChangeListener { _, hasFocus ->
-            if (hasFocus) {
-                // Always show history when focused
+            if (hasFocus && !isNavigatingBack) {
+                // Always show history when focused (but not during back navigation)
                 showSearchHistory()
                 searchAutoComplete?.post {
-                    searchAutoComplete?.showDropDown()
+                    if (!isNavigatingBack) {
+                        searchAutoComplete?.showDropDown()
+                    }
                 }
-            } else {
+            } else if (!hasFocus) {
                 // When losing focus, show current search as the query if we have tags
                 if (currentTags.isNotEmpty() && searchView.query.isNullOrEmpty()) {
                     searchView.setQuery(currentTags, false)
@@ -834,6 +886,13 @@ class MainActivity : BaseActivity(), PostPageAdapter.OnPostClickListener {
         val trimmedQuery = query.trim()
         
         if (trimmedQuery.isNotBlank()) {
+            // Only push to stack if the query is different from current (avoid duplicates)
+            if (trimmedQuery != currentTags) {
+                // Save current state (tags + current page) before changing
+                val currentPage = viewPager.currentItem
+                searchStack.push(Pair(currentTags, currentPage))
+            }
+            
             // Save to history
             prefs.addToSearchHistory(trimmedQuery)
             
@@ -860,8 +919,13 @@ class MainActivity : BaseActivity(), PostPageAdapter.OnPostClickListener {
             Toast.makeText(this, "Showing all posts", Toast.LENGTH_SHORT).show()
         }
         
+        // Hide keyboard and clear focus like T2 does
+        val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as? InputMethodManager
+        imm?.hideSoftInputFromWindow(window.decorView.windowToken, 0)
         searchView.setQuery(trimmedQuery, false)
         searchView.clearFocus()
+        searchAutoComplete?.dismissDropDown()
+        viewPager.requestFocus()
     }
     
     private fun showSearchHistory() {
@@ -1580,6 +1644,37 @@ class MainActivity : BaseActivity(), PostPageAdapter.OnPostClickListener {
         // If in selection mode, clear selection instead of going back
         if (pageAdapter.isInSelectionMode) {
             pageAdapter.clearSelection()
+        } else if (searchStack.isNotEmpty()) {
+            // Go back to previous search state
+            isNavigatingBack = true
+            
+            val (previousTags, previousPage) = searchStack.pop()
+            val tagsChanged = currentTags != previousTags
+            currentTags = previousTags
+            pageAdapter.setTags(previousTags)
+            
+            if (tagsChanged) {
+                // Tags changed - need to reload adapter, start from page 0
+                viewPager.adapter = null
+                viewPager.adapter = pageAdapter
+                viewPager.setCurrentItem(0, false)
+                updatePageIndicator(1)
+            } else {
+                // Same tags - just navigate to the previous page without reloading
+                viewPager.setCurrentItem(previousPage, false)
+                updatePageIndicator(previousPage + 1)
+            }
+            
+            // Hide keyboard and clear focus like in performSearch
+            val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as? InputMethodManager
+            imm?.hideSoftInputFromWindow(window.decorView.windowToken, 0)
+            searchView.setQuery(previousTags, false)
+            searchView.clearFocus()
+            searchAutoComplete?.dismissDropDown()
+            viewPager.requestFocus()
+            
+            // Reset flag after a short delay to allow all async operations to complete
+            viewPager.postDelayed({ isNavigatingBack = false }, 100)
         } else {
             @Suppress("DEPRECATION")
             super.onBackPressed()

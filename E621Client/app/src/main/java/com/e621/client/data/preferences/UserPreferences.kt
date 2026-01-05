@@ -946,7 +946,27 @@ class UserPreferences(context: Context) {
         private const val KEY_AUTO_LOCK = "consent_pin_auto_lock"
         private const val KEY_AUTO_LOCK_INSTANTLY = "consent_pin_auto_lock_instantly"
         
+        // Last search state keys
+        private const val KEY_LAST_SEARCH_PAGE = "last_search_page"
+        
         const val BASE_URL_EXPLICIT = "https://e621.net/"
         const val BASE_URL_SAFE = "https://e926.net/"
+    }
+    
+    // ==================== Last Search State ====================
+    
+    /**
+     * Last search page (for restoring state when app resumes)
+     */
+    var lastSearchPage: Int
+        get() = prefs.getInt(KEY_LAST_SEARCH_PAGE, 0)
+        set(value) = prefs.edit { putInt(KEY_LAST_SEARCH_PAGE, value) }
+    
+    /**
+     * Save current search state
+     */
+    fun saveSearchState(tags: String, page: Int) {
+        lastSearch = tags
+        lastSearchPage = page
     }
 }
