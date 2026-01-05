@@ -737,20 +737,18 @@ class SettingsActivity : AppCompatActivity(),
         }
         
         private fun setupHostPreference() {
-            findPreference<EditTextPreference>("general_change_host")?.apply {
-                text = prefs.host
-                summary = prefs.host
+            findPreference<ListPreference>("general_change_host")?.apply {
+                value = prefs.host
                 
                 setOnPreferenceChangeListener { _, newValue ->
                     val host = newValue as String
-                    when (host.lowercase()) {
+                    when (host) {
                         "e621.net" -> {
                             if (prefs.ageConsent) {
                                 prefs.host = host
                                 prefs.safeMode = false
                                 // Enable all ratings when switching to e621
                                 prefs.filterRating = 7 // All ratings: 1+2+4 = 7
-                                summary = host
                                 
                                 // Recreate API with new base URL and notify activity
                                 E621Application.instance.recreateApi()
@@ -774,7 +772,6 @@ class SettingsActivity : AppCompatActivity(),
                         "e926.net" -> {
                             prefs.host = host
                             prefs.safeMode = true
-                            summary = host
                             
                             // Recreate API with new base URL and notify activity
                             E621Application.instance.recreateApi()
@@ -787,16 +784,7 @@ class SettingsActivity : AppCompatActivity(),
                             ).show()
                             true
                         }
-                        else -> {
-                            Toast.makeText(
-                                requireContext(),
-                                R.string.pref_general_edit_host_not_supported,
-                                Toast.LENGTH_SHORT
-                            ).show()
-                            text = "e926.net"
-                            prefs.host = "e926.net"
-                            false
-                        }
+                        else -> false
                     }
                 }
             }
@@ -811,12 +799,15 @@ class SettingsActivity : AppCompatActivity(),
                     
                     // If unchecked, force e926 mode
                     if (!consent) {
-                        findPreference<EditTextPreference>("general_change_host")?.apply {
-                            text = "e926.net"
-                            summary = "e926.net"
+                        findPreference<ListPreference>("general_change_host")?.apply {
+                            value = "e926.net"
                         }
                         prefs.host = "e926.net"
                         prefs.safeMode = true
+                        
+                        // Recreate API with new base URL and notify activity
+                        E621Application.instance.recreateApi()
+                        activity?.setResult(SettingsActivity.RESULT_HOST_CHANGED)
                     }
                     true
                 }

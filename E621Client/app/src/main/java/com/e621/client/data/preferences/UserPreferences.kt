@@ -707,10 +707,10 @@ class UserPreferences(context: Context) {
         get() = !username.isNullOrEmpty() && !apiKey.isNullOrEmpty()
 
     /**
-     * Get base URL based on safe mode
+     * Get base URL based on host setting
      */
     val baseUrl: String
-        get() = if (safeMode) BASE_URL_SAFE else BASE_URL_EXPLICIT
+        get() = if (host == "e621.net") BASE_URL_EXPLICIT else BASE_URL_SAFE
 
     /**
      * Get authorization header value

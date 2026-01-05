@@ -65,13 +65,13 @@
     </string-array>
     
     <!-- Hosts -->
-    <string-array name="hosts">
-        <item>e621.net (NSFW)</item>
-        <item>e926.net (SFW)</item>
+    <string-array name="host_entries">
+        <item>e926.net (Safe)</item>
+        <item>e621.net (Explicit)</item>
     </string-array>
-    <string-array name="hosts_values">
-        <item>e621</item>
-        <item>e926</item>
+    <string-array name="host_values">
+        <item>e926.net</item>
+        <item>e621.net</item>
     </string-array>
     
     <!-- Themes Extended -->

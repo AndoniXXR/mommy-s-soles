@@ -14,13 +14,15 @@
         app:useSimpleSummaryProvider="true" />
 
     <!-- Host/Site -->
-    <EditTextPreference
+    <ListPreference
         android:key="general_change_host"
         android:title="@string/pref_general_edit_host_title"
-        android:summary="e926.net"
+        android:summary="%s"
         android:icon="@drawable/ic_warning"
-        android:dependency="consent_above_18"
-        android:defaultValue="e926.net" />
+        android:entries="@array/host_entries"
+        android:entryValues="@array/host_values"
+        android:defaultValue="e926.net"
+        app:useSimpleSummaryProvider="true" />
 
     <!-- Age Consent -->
     <SwitchPreferenceCompat
