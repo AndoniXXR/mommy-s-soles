@@ -40,6 +40,12 @@ import com.bumptech.glide.request.target.Target
 import com.e621.client.E621Application
 import com.e621.client.R
 import com.e621.client.data.model.Post
+import com.e621.client.util.VideoCache
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.launch
+import java.io.File
 import com.github.chrisbanes.photoview.PhotoView
 import com.google.android.flexbox.FlexboxLayout
 import java.text.SimpleDateFormat
@@ -102,6 +108,9 @@ class PostViewPagerAdapter(
         
         // Pending fullscreen runnable to cancel on recycle
         private var pendingFullscreenRunnable: Runnable? = null
+        
+        // Video download job for cancellation
+        private var downloadJob: Job? = null
         
         fun cancelPendingFullscreen() {
             pendingFullscreenRunnable?.let { playerView.removeCallbacks(it) }
@@ -388,7 +397,10 @@ class PostViewPagerAdapter(
         }
         
         private fun loadVideo(post: Post) {
-            val videoUrl = post.file.url
+            // Get video URL based on quality and format preferences
+            val videoQuality = prefs.postDefaultVideoQuality.toIntOrNull() ?: 2  // Default 480p
+            val videoFormat = prefs.postDefaultVideoFormat.toIntOrNull() ?: 2    // Default auto
+            val videoUrl = post.getVideoUrl(videoQuality, videoFormat) ?: post.file.url
             
             if (videoUrl.isNullOrEmpty()) {
                 progressLoading.visibility = View.GONE
@@ -396,6 +408,9 @@ class PostViewPagerAdapter(
                 txtError.text = itemView.context.getString(R.string.post_no_image)
                 return
             }
+            
+            // Cancel any previous download job
+            downloadJob?.cancel()
             
             // Hide image, show video player
             imgPreview.visibility = View.GONE
@@ -426,8 +441,85 @@ class PostViewPagerAdapter(
             // Limit maximum active players to prevent resource exhaustion
             cleanupExcessPlayers(maxActivePlayers = 3)
             
-            // Create ExoPlayer
             val context = itemView.context
+            // Get extension from the actual video URL being used
+            val extension = videoUrl.substringAfterLast(".").takeIf { it.length <= 4 } ?: post.file.ext ?: "webm"
+            val fileSize = post.file.size ?: 0L
+            val md5 = post.file.md5
+            
+            // Create cache key based on quality to avoid mixing different quality versions
+            val cacheKey = "${post.id}_${videoQuality}_${videoFormat}"
+            
+            // Check if video is already cached (use original post.id for now, quality handled by URL)
+            if (VideoCache.isCached(context, post.id, extension, 0, null)) {
+                // Play from cache (skip size/md5 check for alternate qualities)
+                val cachedFile = VideoCache.getCachedFile(context, post.id, extension)
+                playVideoFromFile(cachedFile, post, position)
+            } else {
+                // Download first, then play
+                showDownloadProgress(0, fileSize)
+                
+                downloadJob = CoroutineScope(Dispatchers.Main).launch {
+                    VideoCache.downloadToCache(
+                        context = context,
+                        url = videoUrl,
+                        postId = post.id,
+                        extension = extension,
+                        expectedSize = fileSize,
+                        callback = object : VideoCache.DownloadCallback {
+                            override fun onProgress(bytesDownloaded: Long, totalBytes: Long) {
+                                // Verify ViewHolder hasn't been recycled
+                                if (boundPosition == position) {
+                                    showDownloadProgress(bytesDownloaded, totalBytes)
+                                }
+                            }
+                            
+                            override fun onComplete(file: File) {
+                                // Verify ViewHolder hasn't been recycled
+                                if (boundPosition == position) {
+                                    hideLoadingIndicator()
+                                    playVideoFromFile(file, post, position)
+                                }
+                            }
+                            
+                            override fun onError(error: String) {
+                                // Verify ViewHolder hasn't been recycled
+                                if (boundPosition == position) {
+                                    hideLoadingIndicator()
+                                    progressLoading.visibility = View.GONE
+                                    layoutError.visibility = View.VISIBLE
+                                    txtError.text = error
+                                }
+                            }
+                        }
+                    )
+                }
+            }
+            
+            btnRetry.setOnClickListener {
+                loadVideo(post)
+            }
+        }
+        
+        /**
+         * Show download progress indicator
+         */
+        private fun showDownloadProgress(bytesDownloaded: Long, totalBytes: Long) {
+            val downloadedStr = formatFileSize(bytesDownloaded)
+            val totalStr = formatFileSize(totalBytes)
+            val percent = if (totalBytes > 0) (bytesDownloaded * 100 / totalBytes).toInt() else 0
+            txtLoadingProgress.text = itemView.context.getString(R.string.downloading_progress, downloadedStr, totalStr, percent)
+            layoutLoadingIndicator.visibility = View.VISIBLE
+            progressLoading.visibility = View.VISIBLE
+        }
+        
+        /**
+         * Play video from a local file
+         */
+        private fun playVideoFromFile(file: File, post: Post, position: Int) {
+            val context = itemView.context
+            
+            // Create ExoPlayer
             val player = ExoPlayer.Builder(context).build()
             
             // Configure audio attributes for media playback with audio focus
@@ -439,15 +531,15 @@ class PostViewPagerAdapter(
             
             playerView.player = player
             currentPlayer = player
-            currentVideoUrl = videoUrl
+            currentVideoUrl = file.absolutePath
             
             // Store in activePlayers map only with valid position
             if (position != RecyclerView.NO_POSITION) {
                 activePlayers[position] = player
             }
             
-            // Set media item with User-Agent header for e621
-            val mediaItem = MediaItem.fromUri(Uri.parse(videoUrl))
+            // Set media item from local file
+            val mediaItem = MediaItem.fromUri(Uri.fromFile(file))
             player.setMediaItem(mediaItem)
             
             // Configure player based on preferences
@@ -465,11 +557,9 @@ class PostViewPagerAdapter(
             player.setPlaybackSpeed(currentSpeed)
             
             // Setup controls after view is laid out to ensure they're found
-            // Pass the videoUrl and position to prevent wrong video issue when ViewHolder is recycled
-            val boundPosition = position
-            val boundVideoUrl = videoUrl
+            val boundVideoUrl = file.absolutePath
             playerView.post {
-                setupVideoControls(context, player, boundVideoUrl, boundPosition)
+                setupVideoControls(context, player, boundVideoUrl, position)
             }
             
             player.addListener(object : Player.Listener {
@@ -478,7 +568,7 @@ class PostViewPagerAdapter(
                         Player.STATE_BUFFERING -> progressLoading.visibility = View.VISIBLE
                         Player.STATE_READY -> {
                             progressLoading.visibility = View.GONE
-                            hideLoadingIndicator() // Hide top loading indicator when video is ready
+                            hideLoadingIndicator()
                         }
                         Player.STATE_ENDED -> { /* Loop handled by REPEAT_MODE_ALL */ }
                         Player.STATE_IDLE -> { }
@@ -487,10 +577,6 @@ class PostViewPagerAdapter(
             })
             
             player.prepare()
-            
-            btnRetry.setOnClickListener {
-                loadVideo(post)
-            }
         }
         
         private fun showSpeedSelector(context: Context, player: ExoPlayer, speedButton: TextView) {
@@ -589,7 +675,7 @@ class PostViewPagerAdapter(
             val imageUrl = when {
                 prefs.postDataSaver -> post.preview?.url ?: post.sample?.url ?: post.file.url
                 prefs.postLoadHQ -> post.file.url ?: post.sample?.url
-                else -> post.getDisplayUrl(prefs.imageQuality)
+                else -> post.getDisplayUrl(prefs.postQuality)
             }
             
             if (imageUrl.isNullOrEmpty()) {
@@ -640,6 +726,10 @@ class PostViewPagerAdapter(
         }
         
         fun releasePlayer() {
+            // Cancel any pending download
+            downloadJob?.cancel()
+            downloadJob = null
+            
             currentPlayer?.release()
             currentPlayer = null
             currentVideoUrl = null
@@ -950,6 +1040,16 @@ class PostViewPagerAdapter(
     fun releaseAllPlayers() {
         activePlayers.values.forEach { it.release() }
         activePlayers.clear()
+    }
+    
+    /**
+     * Force refresh the current item to recreate video player if needed
+     * Called when activity resumes after players were released in onStop
+     */
+    fun refreshCurrentItem(position: Int) {
+        currentVisiblePosition = position
+        // Notify the adapter to rebind the current item, which will recreate the player
+        notifyItemChanged(position)
     }
     
     /**

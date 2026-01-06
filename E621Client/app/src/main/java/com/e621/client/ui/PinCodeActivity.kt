@@ -48,6 +48,12 @@ class PinCodeActivity : AppCompatActivity() {
     private val maxAttempts = 5
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        // Check if application is properly initialized
+        if (!E621Application.isInitialized) {
+            restartApp()
+            return
+        }
+        
         super.onCreate(savedInstanceState)
         
         // Apply FLAG_SECURE if needed
@@ -250,5 +256,12 @@ class PinCodeActivity : AppCompatActivity() {
     override fun onBackPressed() {
         // Don't allow back - user must enter PIN
         finishAffinity()
+    }
+    
+    private fun restartApp() {
+        val intent = Intent(this, LauncherActivity::class.java)
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
+        startActivity(intent)
+        finish()
     }
 }

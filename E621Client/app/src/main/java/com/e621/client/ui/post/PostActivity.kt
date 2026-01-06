@@ -125,6 +125,12 @@ class PostActivity : AppCompatActivity(), PostViewPagerAdapter.PostInteractionLi
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        // Check if application is properly initialized
+        if (!E621Application.isInitialized) {
+            restartApp()
+            return
+        }
+        
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_post)
         
@@ -1421,11 +1427,21 @@ class PostActivity : AppCompatActivity(), PostViewPagerAdapter.PostInteractionLi
         }
     }
     
+    override fun onStop() {
+        super.onStop()
+        // Release all video players when activity goes to background
+        // This is critical to prevent resource exhaustion when navigating between parent/child posts
+        // Each PostActivity creates its own players, so we must release them when not visible
+        if (::adapter.isInitialized) {
+            adapter.releaseAllPlayers()
+        }
+    }
+    
     override fun onResume() {
         super.onResume()
-        // Resume current video player
+        // Refresh current item to recreate video player if it was released in onStop
         if (::adapter.isInitialized) {
-            adapter.resumePlayer(viewPager.currentItem)
+            adapter.refreshCurrentItem(viewPager.currentItem)
         }
     }
     
@@ -1441,5 +1457,12 @@ class PostActivity : AppCompatActivity(), PostViewPagerAdapter.PostInteractionLi
         if (!prefs.postKeepScreenAwake) {
             window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         }
+    }
+    
+    private fun restartApp() {
+        val intent = Intent(this, com.e621.client.ui.LauncherActivity::class.java)
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
+        startActivity(intent)
+        finish()
     }
 }

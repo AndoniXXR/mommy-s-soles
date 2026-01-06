@@ -421,9 +421,9 @@ class UserPreferences(context: Context) {
         get() = prefs.getBoolean(KEY_POST_HIDE_NAV_BAR, false)
         set(value) = prefs.edit { putBoolean(KEY_POST_HIDE_NAV_BAR, value) }
     
-    // Default video quality (0=original, 1=720p, 2=480p, 3=auto)
+    // Default video quality (0=original, 1=720p, 2=480p)
     var postDefaultVideoQuality: String
-        get() = prefs.getString(KEY_POST_DEFAULT_VIDEO_QUALITY, "1") ?: "1"
+        get() = prefs.getString(KEY_POST_DEFAULT_VIDEO_QUALITY, "2") ?: "2"
         set(value) = prefs.edit { putString(KEY_POST_DEFAULT_VIDEO_QUALITY, value) }
     
     // Default video format (0=webm, 1=mp4, 2=auto)

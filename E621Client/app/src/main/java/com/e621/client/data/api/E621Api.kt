@@ -430,8 +430,10 @@ class E621Api private constructor(
             }
             
             // Configure Gson to be lenient with unknown fields
+            // Register custom deserializer for PostSample to handle alternates field
             val gson = GsonBuilder()
                 .setLenient()
+                .registerTypeAdapter(PostSample::class.java, PostSampleDeserializer())
                 .create()
             
             val client = OkHttpClient.Builder()

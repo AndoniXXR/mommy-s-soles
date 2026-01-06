@@ -107,10 +107,15 @@ data class Post(
     }
     
     /**
-     * Get thumbnail URL
+     * Get thumbnail URL based on quality preference
+     * @param quality 0=low (preview), 1=medium (sample), 2=high (file)
      */
-    fun getThumbnailUrl(): String {
-        return preview.url ?: sample.url ?: file.url ?: ""
+    fun getThumbnailUrl(quality: Int = 0): String {
+        return when (quality) {
+            0 -> preview.url ?: sample.url ?: file.url ?: ""
+            1 -> sample.url ?: preview.url ?: file.url ?: ""
+            else -> file.url ?: sample.url ?: preview.url ?: ""
+        }
     }
     
     /**
@@ -151,6 +156,57 @@ data class Post(
      */
     fun getArtistString(): String {
         return tags.artist?.joinToString(", ") ?: "Unknown"
+    }
+    
+    /**
+     * Get video URL based on quality and format preferences
+     * @param quality 0=original, 1=720p, 2=480p
+     * @param format 0=webm, 1=mp4, 2=auto (prefers webm)
+     * @return Video URL or null if not available
+     */
+    fun getVideoUrl(quality: Int, format: Int): String? {
+        // Check if alternates are available
+        val alternates = sample.alternates
+        if (alternates == null || !isVideo()) {
+            return file.url
+        }
+        
+        // Determine which quality to use
+        val qualityKey = when (quality) {
+            0 -> "original"
+            1 -> "720p"
+            2 -> "480p"
+            else -> "480p"
+        }
+        
+        // Try to get the requested quality, fallback to others
+        val alternate = alternates[qualityKey] 
+            ?: alternates["480p"] 
+            ?: alternates["720p"] 
+            ?: alternates["original"]
+        
+        if (alternate == null || alternate.type != "video") {
+            return file.url
+        }
+        
+        val urls = alternate.urls ?: return file.url
+        
+        // Select format based on preference
+        val webmUrl = urls.find { it?.endsWith(".webm") == true }
+        val mp4Url = urls.find { it?.endsWith(".mp4") == true }
+        
+        return when (format) {
+            0 -> webmUrl ?: mp4Url ?: file.url  // Prefer webm
+            1 -> mp4Url ?: webmUrl ?: file.url  // Prefer mp4
+            else -> webmUrl ?: mp4Url ?: file.url  // Auto: prefer webm
+        }
+    }
+    
+    /**
+     * Check if video has alternate qualities available
+     */
+    fun hasVideoAlternates(): Boolean {
+        return isVideo() && sample.alternates?.isNotEmpty() == true
     }
 }
 
@@ -205,10 +261,12 @@ data class PostSample(
     val height: Int?,
     
     @SerializedName("url")
-    val url: String?
+    val url: String?,
     
-    // Note: 'alternates' field omitted because API returns false (boolean) 
-    // when empty instead of null or empty object, causing parsing issues
+    // Alternates for video quality options (original, 720p, 480p)
+    // Note: API returns false when empty, handled by custom deserializer
+    @SerializedName("alternates")
+    val alternates: Map<String, SampleAlternate>? = null
 )
 
 /**

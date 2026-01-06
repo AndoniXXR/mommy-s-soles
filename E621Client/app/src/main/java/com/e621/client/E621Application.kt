@@ -35,7 +35,7 @@ class E621Application : Application() {
 
     override fun onCreate() {
         super.onCreate()
-        instance = this
+        setInstance(this)
         
         // Initialize preferences
         userPreferences = UserPreferences(this)
@@ -242,7 +242,20 @@ class E621Application : Application() {
     }
 
     companion object {
-        lateinit var instance: E621Application
-            private set
+        private var _instance: E621Application? = null
+        
+        val instance: E621Application
+            get() = _instance ?: throw IllegalStateException("E621Application not initialized")
+        
+        /**
+         * Check if the application instance is initialized
+         * Used to detect when Android restores an Activity without running Application.onCreate()
+         */
+        val isInitialized: Boolean
+            get() = _instance != null
+        
+        internal fun setInstance(app: E621Application) {
+            _instance = app
+        }
     }
 }

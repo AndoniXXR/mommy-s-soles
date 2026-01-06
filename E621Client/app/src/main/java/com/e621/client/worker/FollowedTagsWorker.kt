@@ -275,28 +275,79 @@ class FollowedTagsWorker(
     }
 
     /**
-     * Load thumbnail bitmap from URL
+     * Load thumbnail bitmap from URL with size limits to prevent memory issues
+     * and ensure compatibility with notification system
      */
     private suspend fun loadThumbnail(urlString: String): Bitmap? = withContext(Dispatchers.IO) {
+        var connection: HttpURLConnection? = null
         try {
             val url = URL(urlString)
-            val connection = url.openConnection() as HttpURLConnection
+            connection = url.openConnection() as HttpURLConnection
             connection.apply {
                 requestMethod = "GET"
                 setRequestProperty("User-Agent", USER_AGENT)
-                connectTimeout = 10000
-                readTimeout = 10000
+                connectTimeout = 15000
+                readTimeout = 15000
+                instanceFollowRedirects = true
             }
             
-            if (connection.responseCode == HttpURLConnection.HTTP_OK) {
-                val inputStream = connection.inputStream
-                BitmapFactory.decodeStream(inputStream)
-            } else {
-                null
+            val responseCode = connection.responseCode
+            if (responseCode != HttpURLConnection.HTTP_OK) {
+                Log.w(TAG, "Thumbnail request failed with code: $responseCode")
+                return@withContext null
             }
-        } catch (e: Exception) {
-            Log.e(TAG, "Error loading thumbnail", e)
+            
+            // Read the stream into a byte array first to avoid stream issues
+            val inputStream = connection.inputStream
+            val bytes = inputStream.readBytes()
+            inputStream.close()
+            
+            if (bytes.isEmpty()) {
+                Log.w(TAG, "Empty response for thumbnail")
+                return@withContext null
+            }
+            
+            // Decode with options to limit size and prevent OOM
+            val options = BitmapFactory.Options().apply {
+                inJustDecodeBounds = true
+            }
+            BitmapFactory.decodeByteArray(bytes, 0, bytes.size, options)
+            
+            // Calculate sample size to limit bitmap to max 512x512
+            val maxSize = 512
+            var sampleSize = 1
+            while (options.outWidth / sampleSize > maxSize || options.outHeight / sampleSize > maxSize) {
+                sampleSize *= 2
+            }
+            
+            // Decode the actual bitmap with the calculated sample size
+            val decodeOptions = BitmapFactory.Options().apply {
+                inSampleSize = sampleSize
+                inPreferredConfig = Bitmap.Config.RGB_565  // Use less memory
+            }
+            
+            val bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.size, decodeOptions)
+            
+            if (bitmap == null) {
+                Log.w(TAG, "Failed to decode bitmap from bytes")
+                return@withContext null
+            }
+            
+            Log.d(TAG, "Thumbnail loaded: ${bitmap.width}x${bitmap.height}")
+            bitmap
+            
+        } catch (e: OutOfMemoryError) {
+            Log.e(TAG, "OutOfMemoryError loading thumbnail", e)
             null
+        } catch (e: Exception) {
+            Log.e(TAG, "Error loading thumbnail: ${e.message}", e)
+            null
+        } finally {
+            try {
+                connection?.disconnect()
+            } catch (e: Exception) {
+                // Ignore cleanup errors
+            }
         }
     }
 }

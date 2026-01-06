@@ -12,6 +12,9 @@ import android.widget.TextView
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
+import com.bumptech.glide.load.engine.DiskCacheStrategy
+import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions
+import com.e621.client.E621Application
 import com.e621.client.R
 import com.e621.client.data.model.Post
 
@@ -24,6 +27,8 @@ class PostGridAdapter(
     private val selectedPosts: MutableSet<Int>,
     private val listener: OnPostClickListener
 ) : RecyclerView.Adapter<PostGridAdapter.PostViewHolder>() {
+
+    private val prefs = E621Application.instance.userPreferences
 
     interface OnPostClickListener {
         fun onPostClick(post: Post, position: Int)
@@ -43,9 +48,15 @@ class PostGridAdapter(
         val fLOverlay: FrameLayout = itemView.findViewById(R.id.fLOverlay)
         
         fun bind(post: Post) {
-            // Load thumbnail
+            // Load thumbnail with optimized settings for fast loading
+            val thumbnailUrl = post.getThumbnailUrl(prefs.thumbQuality)
+            
             Glide.with(itemView.context)
-                .load(post.getThumbnailUrl())
+                .load(thumbnailUrl)
+                .thumbnail(0.25f)  // Load 25% size first for progressive loading
+                .override(300, 300)  // Limit decode size for faster loading
+                .diskCacheStrategy(DiskCacheStrategy.ALL)  // Cache both original and transformed
+                .transition(DrawableTransitionOptions.withCrossFade(150))  // Smooth fade-in
                 .placeholder(R.drawable.ic_image_placeholder)
                 .error(R.drawable.ic_image_error)
                 .centerCrop()
@@ -144,9 +155,34 @@ class PostGridAdapter(
 
     override fun onBindViewHolder(holder: PostViewHolder, position: Int) {
         holder.bind(posts[position])
+        
+        // Preload nearby images for smoother scrolling
+        preloadNearbyImages(holder.itemView.context, position)
     }
 
     override fun getItemCount(): Int = posts.size
+    
+    /**
+     * Preload images for posts that are about to be visible
+     * This makes scrolling much smoother
+     */
+    private fun preloadNearbyImages(context: android.content.Context, currentPosition: Int) {
+        val preloadRange = 6  // Preload 6 items ahead
+        
+        for (i in 1..preloadRange) {
+            val nextPosition = currentPosition + i
+            if (nextPosition < posts.size) {
+                val post = posts[nextPosition]
+                val url = post.getThumbnailUrl(prefs.thumbQuality)
+                
+                Glide.with(context)
+                    .load(url)
+                    .override(300, 300)
+                    .diskCacheStrategy(DiskCacheStrategy.ALL)
+                    .preload()
+            }
+        }
+    }
     
     fun clearSelection() {
         selectedPosts.clear()

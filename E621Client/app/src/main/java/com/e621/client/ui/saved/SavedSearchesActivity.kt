@@ -65,6 +65,12 @@ class SavedSearchesActivity : AppCompatActivity() {
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        // Check if application is properly initialized
+        if (!E621Application.isInitialized) {
+            restartApp()
+            return
+        }
+        
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_saved_searches)
         
@@ -316,6 +322,13 @@ class SavedSearchesActivity : AppCompatActivity() {
         
         updateList()
         Toast.makeText(this, R.string.saved_menu_order_tags_alphabetically, Toast.LENGTH_SHORT).show()
+    }
+    
+    private fun restartApp() {
+        val intent = Intent(this, com.e621.client.ui.LauncherActivity::class.java)
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
+        startActivity(intent)
+        finish()
     }
     
     companion object {

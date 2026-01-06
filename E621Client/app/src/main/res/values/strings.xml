@@ -113,6 +113,7 @@
     <!-- Loading Progress -->
     <string name="loading_progress">%1$s / %2$s</string>
     <string name="loading_size">Loading %1$s…</string>
+    <string name="downloading_progress">Downloading %1$s / %2$s (%3$d%%)</string>
     
     <!-- Tags -->
     <string name="tag_general">General</string>
