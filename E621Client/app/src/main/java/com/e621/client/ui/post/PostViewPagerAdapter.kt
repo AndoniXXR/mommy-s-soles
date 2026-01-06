@@ -25,7 +25,10 @@ import androidx.media3.common.AudioAttributes
 import androidx.media3.common.C
 import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
+import androidx.media3.common.util.UnstableApi
+import androidx.media3.exoplayer.DefaultLoadControl
 import androidx.media3.exoplayer.ExoPlayer
+import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
 import androidx.media3.ui.PlayerView
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
@@ -40,12 +43,8 @@ import com.bumptech.glide.request.target.Target
 import com.e621.client.E621Application
 import com.e621.client.R
 import com.e621.client.data.model.Post
-import com.e621.client.util.VideoCache
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.launch
-import java.io.File
+import com.e621.client.util.MediaCacheManager
+import com.e621.client.util.NetworkMonitor
 import com.github.chrisbanes.photoview.PhotoView
 import com.google.android.flexbox.FlexboxLayout
 import java.text.SimpleDateFormat
@@ -108,9 +107,6 @@ class PostViewPagerAdapter(
         
         // Pending fullscreen runnable to cancel on recycle
         private var pendingFullscreenRunnable: Runnable? = null
-        
-        // Video download job for cancellation
-        private var downloadJob: Job? = null
         
         fun cancelPendingFullscreen() {
             pendingFullscreenRunnable?.let { playerView.removeCallbacks(it) }
@@ -396,9 +392,18 @@ class PostViewPagerAdapter(
             }
         }
         
+        @androidx.annotation.OptIn(UnstableApi::class)
         private fun loadVideo(post: Post) {
             // Get video URL based on quality and format preferences
-            val videoQuality = prefs.postDefaultVideoQuality.toIntOrNull() ?: 2  // Default 480p
+            // If on mobile data with poor connection, override to lower quality
+            val userVideoQuality = prefs.postDefaultVideoQuality.toIntOrNull() ?: 2  // Default 480p
+            val videoQuality = if (NetworkMonitor.isMetered() && 
+                NetworkMonitor.getConnectionQuality() <= NetworkMonitor.ConnectionQuality.MODERATE) {
+                // Force 480p on slow mobile connections
+                maxOf(userVideoQuality, 2)
+            } else {
+                userVideoQuality
+            }
             val videoFormat = prefs.postDefaultVideoFormat.toIntOrNull() ?: 2    // Default auto
             val videoUrl = post.getVideoUrl(videoQuality, videoFormat) ?: post.file.url
             
@@ -408,9 +413,6 @@ class PostViewPagerAdapter(
                 txtError.text = itemView.context.getString(R.string.post_no_image)
                 return
             }
-            
-            // Cancel any previous download job
-            downloadJob?.cancel()
             
             // Hide image, show video player
             imgPreview.visibility = View.GONE
@@ -439,88 +441,60 @@ class PostViewPagerAdapter(
             }
             
             // Limit maximum active players to prevent resource exhaustion
-            cleanupExcessPlayers(maxActivePlayers = 3)
+            // Reduced to 1 to be more aggressive about releasing resources
+            cleanupExcessPlayers(maxActivePlayers = 1)
             
             val context = itemView.context
-            // Get extension from the actual video URL being used
-            val extension = videoUrl.substringAfterLast(".").takeIf { it.length <= 4 } ?: post.file.ext ?: "webm"
+            
+            // Show loading indicator with file size
             val fileSize = post.file.size ?: 0L
-            val md5 = post.file.md5
+            showStreamingIndicator(fileSize)
             
-            // Create cache key based on quality to avoid mixing different quality versions
-            val cacheKey = "${post.id}_${videoQuality}_${videoFormat}"
+            // Create ExoPlayer with CacheDataSource for streaming with progressive cache
+            // This is the T2 approach - video plays while downloading to cache
+            val cacheDataSourceFactory = MediaCacheManager.createCacheDataSourceFactory(context)
+            val mediaSourceFactory = DefaultMediaSourceFactory(cacheDataSourceFactory)
             
-            // Check if video is already cached (use original post.id for now, quality handled by URL)
-            if (VideoCache.isCached(context, post.id, extension, 0, null)) {
-                // Play from cache (skip size/md5 check for alternate qualities)
-                val cachedFile = VideoCache.getCachedFile(context, post.id, extension)
-                playVideoFromFile(cachedFile, post, position)
-            } else {
-                // Download first, then play
-                showDownloadProgress(0, fileSize)
-                
-                downloadJob = CoroutineScope(Dispatchers.Main).launch {
-                    VideoCache.downloadToCache(
-                        context = context,
-                        url = videoUrl,
-                        postId = post.id,
-                        extension = extension,
-                        expectedSize = fileSize,
-                        callback = object : VideoCache.DownloadCallback {
-                            override fun onProgress(bytesDownloaded: Long, totalBytes: Long) {
-                                // Verify ViewHolder hasn't been recycled
-                                if (boundPosition == position) {
-                                    showDownloadProgress(bytesDownloaded, totalBytes)
-                                }
-                            }
-                            
-                            override fun onComplete(file: File) {
-                                // Verify ViewHolder hasn't been recycled
-                                if (boundPosition == position) {
-                                    hideLoadingIndicator()
-                                    playVideoFromFile(file, post, position)
-                                }
-                            }
-                            
-                            override fun onError(error: String) {
-                                // Verify ViewHolder hasn't been recycled
-                                if (boundPosition == position) {
-                                    hideLoadingIndicator()
-                                    progressLoading.visibility = View.GONE
-                                    layoutError.visibility = View.VISIBLE
-                                    txtError.text = error
-                                }
-                            }
-                        }
-                    )
+            // Configure buffer sizes based on network quality
+            // Larger buffers for slow connections to prevent rebuffering
+            val loadControl = when (NetworkMonitor.getConnectionQuality()) {
+                NetworkMonitor.ConnectionQuality.EXCELLENT -> {
+                    DefaultLoadControl.Builder()
+                        .setBufferDurationsMs(
+                            DefaultLoadControl.DEFAULT_MIN_BUFFER_MS,
+                            DefaultLoadControl.DEFAULT_MAX_BUFFER_MS,
+                            DefaultLoadControl.DEFAULT_BUFFER_FOR_PLAYBACK_MS,
+                            DefaultLoadControl.DEFAULT_BUFFER_FOR_PLAYBACK_AFTER_REBUFFER_MS
+                        )
+                        .build()
+                }
+                NetworkMonitor.ConnectionQuality.GOOD -> {
+                    DefaultLoadControl.Builder()
+                        .setBufferDurationsMs(
+                            30_000,  // Min buffer 30s
+                            60_000,  // Max buffer 60s
+                            3_000,   // Buffer for playback 3s
+                            5_000    // Buffer after rebuffer 5s
+                        )
+                        .build()
+                }
+                else -> {
+                    // Moderate, Poor, or Unknown - use larger buffers
+                    DefaultLoadControl.Builder()
+                        .setBufferDurationsMs(
+                            50_000,  // Min buffer 50s
+                            120_000, // Max buffer 2 min
+                            5_000,   // Buffer for playback 5s
+                            8_000    // Buffer after rebuffer 8s
+                        )
+                        .build()
                 }
             }
             
-            btnRetry.setOnClickListener {
-                loadVideo(post)
-            }
-        }
-        
-        /**
-         * Show download progress indicator
-         */
-        private fun showDownloadProgress(bytesDownloaded: Long, totalBytes: Long) {
-            val downloadedStr = formatFileSize(bytesDownloaded)
-            val totalStr = formatFileSize(totalBytes)
-            val percent = if (totalBytes > 0) (bytesDownloaded * 100 / totalBytes).toInt() else 0
-            txtLoadingProgress.text = itemView.context.getString(R.string.downloading_progress, downloadedStr, totalStr, percent)
-            layoutLoadingIndicator.visibility = View.VISIBLE
-            progressLoading.visibility = View.VISIBLE
-        }
-        
-        /**
-         * Play video from a local file
-         */
-        private fun playVideoFromFile(file: File, post: Post, position: Int) {
-            val context = itemView.context
-            
-            // Create ExoPlayer
-            val player = ExoPlayer.Builder(context).build()
+            val player = ExoPlayer.Builder(context)
+                .setMediaSourceFactory(mediaSourceFactory)
+                .setLoadControl(loadControl)
+                .build()
             
             // Configure audio attributes for media playback with audio focus
             val audioAttributes = AudioAttributes.Builder()
@@ -531,15 +505,15 @@ class PostViewPagerAdapter(
             
             playerView.player = player
             currentPlayer = player
-            currentVideoUrl = file.absolutePath
+            currentVideoUrl = videoUrl
             
             // Store in activePlayers map only with valid position
             if (position != RecyclerView.NO_POSITION) {
                 activePlayers[position] = player
             }
             
-            // Set media item from local file
-            val mediaItem = MediaItem.fromUri(Uri.fromFile(file))
+            // Set media item from URL - ExoPlayer will stream and cache progressively
+            val mediaItem = MediaItem.fromUri(Uri.parse(videoUrl))
             player.setMediaItem(mediaItem)
             
             // Configure player based on preferences
@@ -557,9 +531,8 @@ class PostViewPagerAdapter(
             player.setPlaybackSpeed(currentSpeed)
             
             // Setup controls after view is laid out to ensure they're found
-            val boundVideoUrl = file.absolutePath
             playerView.post {
-                setupVideoControls(context, player, boundVideoUrl, position)
+                setupVideoControls(context, player, videoUrl, position)
             }
             
             player.addListener(object : Player.Listener {
@@ -574,9 +547,33 @@ class PostViewPagerAdapter(
                         Player.STATE_IDLE -> { }
                     }
                 }
+                
+                override fun onPlayerError(error: androidx.media3.common.PlaybackException) {
+                    // Verify ViewHolder hasn't been recycled
+                    if (boundPosition == position) {
+                        hideLoadingIndicator()
+                        progressLoading.visibility = View.GONE
+                        layoutError.visibility = View.VISIBLE
+                        txtError.text = error.message ?: context.getString(R.string.post_error_loading)
+                    }
+                }
             })
             
             player.prepare()
+            
+            btnRetry.setOnClickListener {
+                loadVideo(post)
+            }
+        }
+        
+        /**
+         * Show streaming indicator with file size
+         */
+        private fun showStreamingIndicator(fileSize: Long) {
+            val sizeStr = formatFileSize(fileSize)
+            txtLoadingProgress.text = itemView.context.getString(R.string.loading_size, sizeStr)
+            layoutLoadingIndicator.visibility = View.VISIBLE
+            progressLoading.visibility = View.VISIBLE
         }
         
         private fun showSpeedSelector(context: Context, player: ExoPlayer, speedButton: TextView) {
@@ -726,10 +723,6 @@ class PostViewPagerAdapter(
         }
         
         fun releasePlayer() {
-            // Cancel any pending download
-            downloadJob?.cancel()
-            downloadJob = null
-            
             currentPlayer?.release()
             currentPlayer = null
             currentVideoUrl = null

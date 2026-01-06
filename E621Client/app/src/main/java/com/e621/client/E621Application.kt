@@ -11,6 +11,7 @@ import androidx.work.WorkManager
 import com.e621.client.data.api.E621Api
 import com.e621.client.data.preferences.UserPreferences
 import com.e621.client.service.TagMonitoringService
+import com.e621.client.util.NetworkMonitor
 import com.e621.client.worker.FollowedTagsWorker
 import com.e621.client.worker.UpdateCheckWorker
 import java.util.concurrent.TimeUnit
@@ -45,6 +46,9 @@ class E621Application : Application() {
         
         // Initialize API
         api = E621Api.create(userPreferences)
+        
+        // Initialize network monitor for detecting WiFi vs mobile data
+        NetworkMonitor.init(this)
         
         // Setup followed tags monitoring (Worker or Service)
         setupTagMonitoring()

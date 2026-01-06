@@ -493,9 +493,13 @@ class E621Api private constructor(
                     }
                 }
                 .addInterceptor(loggingInterceptor)
-                .connectTimeout(30, TimeUnit.SECONDS)
-                .readTimeout(30, TimeUnit.SECONDS)
-                .writeTimeout(30, TimeUnit.SECONDS)
+                // Reduced timeouts for better mobile data experience
+                // Shorter connect timeout to fail fast on bad connections
+                .connectTimeout(15, TimeUnit.SECONDS)
+                .readTimeout(20, TimeUnit.SECONDS)
+                .writeTimeout(20, TimeUnit.SECONDS)
+                // Enable retry on connection failure
+                .retryOnConnectionFailure(true)
                 .build()
             
             val retrofit = Retrofit.Builder()
