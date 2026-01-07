@@ -1,7 +1,9 @@
 package com.e621.client.ui.saved
 
 import android.app.Activity
+import android.content.Context
 import android.content.Intent
+import android.content.res.Configuration
 import android.net.Uri
 import android.os.Bundle
 import android.text.Editable
@@ -24,12 +26,27 @@ import com.google.android.material.appbar.MaterialToolbar
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import java.io.BufferedReader
 import java.io.InputStreamReader
+import java.util.Locale
 
 /**
  * Activity for managing saved searches
  * Based on decompiled SavedSearchesActivity
  */
 class SavedSearchesActivity : AppCompatActivity() {
+
+    override fun attachBaseContext(newBase: Context) {
+        val prefs = newBase.getSharedPreferences("${newBase.packageName}_preferences", Context.MODE_PRIVATE)
+        val languageCode = prefs.getString("general_language", "en") ?: "en"
+        if (languageCode != "system" && languageCode.isNotEmpty()) {
+            val locale = Locale.forLanguageTag(languageCode)
+            Locale.setDefault(locale)
+            val config = Configuration(newBase.resources.configuration)
+            config.setLocale(locale)
+            super.attachBaseContext(newBase.createConfigurationContext(config))
+        } else {
+            super.attachBaseContext(newBase)
+        }
+    }
 
     private lateinit var toolbar: MaterialToolbar
     private lateinit var recyclerView: RecyclerView

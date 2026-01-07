@@ -1,5 +1,7 @@
 package com.e621.client.ui.auth
 
+import android.content.Context
+import android.content.res.Configuration
 import android.os.Bundle
 import android.view.View
 import android.view.autofill.AutofillManager
@@ -21,6 +23,7 @@ import kotlinx.coroutines.withContext
 import okhttp3.Credentials
 import okhttp3.OkHttpClient
 import okhttp3.Request
+import java.util.Locale
 import java.util.concurrent.TimeUnit
 
 /**
@@ -29,6 +32,20 @@ import java.util.concurrent.TimeUnit
  * Uses e621 API authentication (username + api_key)
  */
 class LoginActivity : AppCompatActivity() {
+
+    override fun attachBaseContext(newBase: Context) {
+        val prefs = newBase.getSharedPreferences("${newBase.packageName}_preferences", Context.MODE_PRIVATE)
+        val languageCode = prefs.getString("general_language", "en") ?: "en"
+        if (languageCode != "system" && languageCode.isNotEmpty()) {
+            val locale = Locale.forLanguageTag(languageCode)
+            Locale.setDefault(locale)
+            val config = Configuration(newBase.resources.configuration)
+            config.setLocale(locale)
+            super.attachBaseContext(newBase.createConfigurationContext(config))
+        } else {
+            super.attachBaseContext(newBase)
+        }
+    }
 
     private lateinit var etUsername: EditText
     private lateinit var etApiKey: EditText

@@ -468,4 +468,8 @@
     <!-- Language arrays -->
     <string name="arrays_language_english">Inglés (English)</string>
     <string name="arrays_language_spanish">Español (Spanish)</string>
+    
+    <!-- Language -->
+    <string name="language_already_selected">Ya estás usando este idioma</string>
+    <string name="language_changing">Cambiando idioma…</string>
 </resources>

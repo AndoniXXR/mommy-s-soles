@@ -1,17 +1,34 @@
 package com.e621.client.ui.about
 
+import android.content.Context
 import android.content.Intent
+import android.content.res.Configuration
 import android.net.Uri
 import android.os.Bundle
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import com.e621.client.R
 import com.google.android.material.appbar.MaterialToolbar
+import java.util.Locale
 
 /**
  * About Activity - Shows app information and links
  */
 class AboutActivity : AppCompatActivity() {
+
+    override fun attachBaseContext(newBase: Context) {
+        val prefs = newBase.getSharedPreferences("${newBase.packageName}_preferences", Context.MODE_PRIVATE)
+        val languageCode = prefs.getString("general_language", "en") ?: "en"
+        if (languageCode != "system" && languageCode.isNotEmpty()) {
+            val locale = Locale.forLanguageTag(languageCode)
+            Locale.setDefault(locale)
+            val config = Configuration(newBase.resources.configuration)
+            config.setLocale(locale)
+            super.attachBaseContext(newBase.createConfigurationContext(config))
+        } else {
+            super.attachBaseContext(newBase)
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

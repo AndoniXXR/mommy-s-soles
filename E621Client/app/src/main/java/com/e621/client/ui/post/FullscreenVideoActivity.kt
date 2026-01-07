@@ -3,6 +3,7 @@ package com.e621.client.ui.post
 import android.content.Context
 import android.content.Intent
 import android.content.pm.ActivityInfo
+import android.content.res.Configuration
 import android.net.Uri
 import android.os.Bundle
 import android.util.Log
@@ -24,11 +25,26 @@ import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.ui.PlayerView
 import com.e621.client.E621Application
 import com.e621.client.R
+import java.util.Locale
 
 /**
  * Fullscreen video player activity
  */
 class FullscreenVideoActivity : AppCompatActivity() {
+
+    override fun attachBaseContext(newBase: Context) {
+        val prefs = newBase.getSharedPreferences("${newBase.packageName}_preferences", Context.MODE_PRIVATE)
+        val languageCode = prefs.getString("general_language", "en") ?: "en"
+        if (languageCode != "system" && languageCode.isNotEmpty()) {
+            val locale = Locale.forLanguageTag(languageCode)
+            Locale.setDefault(locale)
+            val config = Configuration(newBase.resources.configuration)
+            config.setLocale(locale)
+            super.attachBaseContext(newBase.createConfigurationContext(config))
+        } else {
+            super.attachBaseContext(newBase)
+        }
+    }
 
     private lateinit var playerView: PlayerView
     private var player: ExoPlayer? = null

@@ -40,28 +40,12 @@
     
     <!-- Languages -->
     <string-array name="languages">
-        <item>System default</item>
         <item>English</item>
         <item>Español</item>
-        <item>Français</item>
-        <item>Deutsch</item>
-        <item>Italiano</item>
-        <item>Português</item>
-        <item>日本語</item>
-        <item>中文</item>
-        <item>Русский</item>
     </string-array>
     <string-array name="languages_values">
-        <item>system</item>
         <item>en</item>
         <item>es</item>
-        <item>fr</item>
-        <item>de</item>
-        <item>it</item>
-        <item>pt</item>
-        <item>ja</item>
-        <item>zh</item>
-        <item>ru</item>
     </string-array>
     
     <!-- Hosts -->

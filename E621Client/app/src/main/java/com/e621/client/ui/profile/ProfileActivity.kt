@@ -1,6 +1,8 @@
 package com.e621.client.ui.profile
 
+import android.content.Context
 import android.content.Intent
+import android.content.res.Configuration
 import android.os.Bundle
 import android.view.View
 import android.widget.ImageView
@@ -27,6 +29,20 @@ import java.util.*
  * Profile Activity - Shows user profile information
  */
 class ProfileActivity : AppCompatActivity() {
+
+    override fun attachBaseContext(newBase: Context) {
+        val prefs = newBase.getSharedPreferences("${newBase.packageName}_preferences", Context.MODE_PRIVATE)
+        val languageCode = prefs.getString("general_language", "en") ?: "en"
+        if (languageCode != "system" && languageCode.isNotEmpty()) {
+            val locale = Locale.forLanguageTag(languageCode)
+            Locale.setDefault(locale)
+            val config = Configuration(newBase.resources.configuration)
+            config.setLocale(locale)
+            super.attachBaseContext(newBase.createConfigurationContext(config))
+        } else {
+            super.attachBaseContext(newBase)
+        }
+    }
 
     companion object {
         const val EXTRA_USERNAME = "username"

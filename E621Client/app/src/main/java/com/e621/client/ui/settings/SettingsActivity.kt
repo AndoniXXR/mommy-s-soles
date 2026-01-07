@@ -748,11 +748,20 @@ class SettingsActivity : AppCompatActivity(),
                     "${requireContext().packageName}_preferences",
                     Context.MODE_PRIVATE
                 )
-                val currentLang = defaultPrefs.getString("general_language", "system") ?: "system"
+                val currentLang = defaultPrefs.getString("general_language", "en") ?: "en"
                 value = currentLang
                 
                 setOnPreferenceChangeListener { _, newValue ->
                     val languageCode = newValue as String
+                    
+                    // Check if user selected the same language
+                    if (languageCode == currentLang) {
+                        Toast.makeText(requireContext(), getString(R.string.language_already_selected), Toast.LENGTH_SHORT).show()
+                        return@setOnPreferenceChangeListener false
+                    }
+                    
+                    // Show changing language message
+                    Toast.makeText(requireContext(), getString(R.string.language_changing), Toast.LENGTH_SHORT).show()
                     
                     // Save to the default preferences file (used by PreferenceFragment and attachBaseContext)
                     val sharedPrefs = requireContext().getSharedPreferences(
@@ -774,7 +783,7 @@ class SettingsActivity : AppCompatActivity(),
                         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
                         requireContext().startActivity(intent)
                         Runtime.getRuntime().exit(0)
-                    }, 300)
+                    }, 500)
                     
                     true
                 }

@@ -1,5 +1,7 @@
 package com.e621.client.ui.post
 
+import android.content.Context
+import android.content.res.Configuration
 import android.os.Bundle
 import android.view.MenuItem
 import android.widget.EditText
@@ -16,11 +18,26 @@ import com.e621.client.E621Application
 import com.e621.client.R
 import com.e621.client.data.model.Post
 import kotlinx.coroutines.launch
+import java.util.Locale
 
 /**
  * Activity for editing post tags and rating
  */
 class EditPostActivity : AppCompatActivity() {
+
+    override fun attachBaseContext(newBase: Context) {
+        val prefs = newBase.getSharedPreferences("${newBase.packageName}_preferences", Context.MODE_PRIVATE)
+        val languageCode = prefs.getString("general_language", "en") ?: "en"
+        if (languageCode != "system" && languageCode.isNotEmpty()) {
+            val locale = Locale.forLanguageTag(languageCode)
+            Locale.setDefault(locale)
+            val config = Configuration(newBase.resources.configuration)
+            config.setLocale(locale)
+            super.attachBaseContext(newBase.createConfigurationContext(config))
+        } else {
+            super.attachBaseContext(newBase)
+        }
+    }
     
     private lateinit var toolbar: Toolbar
     private lateinit var etArtistTags: EditText

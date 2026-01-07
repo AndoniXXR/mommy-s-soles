@@ -58,12 +58,32 @@ import java.io.File
 import java.io.FileOutputStream
 import java.net.HttpURLConnection
 import java.net.URL
+import android.content.res.Configuration
+import java.util.Locale
 
 /**
  * Post Detail Activity with ViewPager2 for swiping between posts
  * Based on decompiled PostActivity structure from original app
  */
 class PostActivity : AppCompatActivity(), PostViewPagerAdapter.PostInteractionListener {
+
+    override fun attachBaseContext(newBase: Context) {
+        val prefs = newBase.getSharedPreferences("${newBase.packageName}_preferences", Context.MODE_PRIVATE)
+        val languageCode = prefs.getString("general_language", "en") ?: "en"
+        
+        if (languageCode != "system" && languageCode.isNotEmpty()) {
+            val locale = Locale.forLanguageTag(languageCode)
+            Locale.setDefault(locale)
+            
+            val config = Configuration(newBase.resources.configuration)
+            config.setLocale(locale)
+            
+            val context = newBase.createConfigurationContext(config)
+            super.attachBaseContext(context)
+        } else {
+            super.attachBaseContext(newBase)
+        }
+    }
 
     private lateinit var viewPager: ViewPager2
     private lateinit var adapter: PostViewPagerAdapter

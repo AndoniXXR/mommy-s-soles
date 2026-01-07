@@ -853,4 +853,8 @@
     <!-- About Preferences -->
     <string name="pref_version_title">Version</string>
     <string name="pref_version_summary">1.0.0</string>
+    
+    <!-- Language -->
+    <string name="language_already_selected">You are already using this language</string>
+    <string name="language_changing">Changing language…</string>
 </resources>
