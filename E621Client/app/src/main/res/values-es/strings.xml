@@ -1,0 +1,471 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Navigation -->
+    <string name="nav_home">Inicio</string>
+    <string name="nav_search">Buscar</string>
+    <string name="nav_favorites">Favoritos</string>
+    <string name="nav_pools">Listas</string>
+    <string name="nav_profile">Perfil</string>
+    <string name="nav_previous">Anterior</string>
+    <string name="nav_next">Siguiente</string>
+    <string name="nav_saved">Búsquedas guardadas</string>
+    <string name="nav_filter">Filtros y orden</string>
+    
+    <!-- Filter Menu -->
+    <string name="filter_rating">Clasificación</string>
+    <string name="filter_rating_show_e">Mostrar explícito</string>
+    <string name="filter_rating_show_q">Mostrar cuestionable</string>
+    <string name="filter_rating_show_s">Mostrar seguro</string>
+    <string name="filter_type">Tipo de post</string>
+    <string name="filter_type_all">Mostrar todo</string>
+    <string name="filter_type_only_images">Solo imágenes</string>
+    <string name="filter_type_only_videos">Solo videos</string>
+    <string name="filter_type_only_gifs">Solo gifs</string>
+    <string name="filter_order">Ordenar por</string>
+    <string name="filter_order_page_by">Ordenar posts por (por página)</string>
+    <string name="filter_order_by_newest">Más recientes primero</string>
+    <string name="filter_order_by_oldest">Más antiguos primero</string>
+    <string name="filter_order_by_score">Mayor puntuación</string>
+    <string name="filter_order_by_favs">Más favoritos</string>
+    <string name="filter_order_by_date_faved">Fecha de favorito</string>
+    
+    <!-- Login -->
+    <string name="login">Iniciar sesión</string>
+    <string name="login_title">Iniciar Sesión</string>
+    <string name="login_subtitle">Ingresa tu usuario de e621 y clave API.\nPuedes encontrar tu clave API en:\nhttps://e621.net/users/home</string>
+    <string name="login_username">Usuario</string>
+    <string name="login_api_key">Clave API</string>
+    <string name="login_button">Iniciar sesión</string>
+    <string name="login_cancel">Cancelar</string>
+    <string name="login_success">¡Inicio de sesión exitoso!</string>
+    <string name="login_error">Error al iniciar sesión: %1$s</string>
+    <string name="login_username_empty">El usuario no puede estar vacío</string>
+    <string name="login_api_key_empty">La clave API no puede estar vacía</string>
+    <string name="logout">Cerrar sesión</string>
+    <string name="logout_confirm">¿Estás seguro de que quieres cerrar sesión?</string>
+    <string name="login_required">Necesitas iniciar sesión para hacer esto</string>
+    
+    <!-- Main -->
+    <string name="main_search_hint">Buscar tags…</string>
+    <string name="main_page_nr">Página 1</string>
+    <string name="main_page_number">Página %1$d</string>
+    <string name="main_loading">Cargando…</string>
+    <string name="main_no_posts">No se encontraron posts</string>
+    <string name="main_error">Error al cargar posts</string>
+    <string name="main_retry">Reintentar</string>
+    
+    <!-- Content Descriptions -->
+    <string name="cd_menu">Menú</string>
+    <string name="cd_search">Buscar</string>
+    <string name="cd_post_image">Imagen del post</string>
+    
+    <!-- Post -->
+    <string name="post_title">Post #%1$d</string>
+    <string name="post_score">Puntuación: %1$d</string>
+    <string name="post_favorites">Favoritos: %1$d</string>
+    <string name="post_rating">Clasificación: %1$s</string>
+    <string name="post_artist">Artista: %1$s</string>
+    <string name="post_tags">Tags</string>
+    <string name="post_comments">Comentarios (%1$d)</string>
+    <string name="post_download">Descargar</string>
+    <string name="post_share">Compartir</string>
+    <string name="post_favorite">Favorito</string>
+    <string name="post_unfavorite">Quitar favorito</string>
+    <string name="post_upvote">Voto positivo</string>
+    <string name="post_downvote">Voto negativo</string>
+    <string name="post_source">Fuente</string>
+    <string name="post_favorited">Añadido a favoritos</string>
+    <string name="post_unfavorited">Eliminado de favoritos</string>
+    
+    <!-- Video Player -->
+    <string name="playback_speed">Velocidad de reproducción</string>
+    <string name="fullscreen">Pantalla completa</string>
+    
+    <!-- Votes -->
+    <string name="voted_up">¡Voto positivo!</string>
+    <string name="voted_down">Voto negativo</string>
+    <string name="vote_removed_up">Voto positivo eliminado</string>
+    <string name="vote_removed_down">Voto negativo eliminado</string>
+    <string name="already_voted">Ya has votado en este post</string>
+    <string name="error_voting">Error al votar</string>
+    
+    <!-- Downloads -->
+    <string name="downloading_post">Descargando post #%1$d…</string>
+    <string name="downloading_file">Descargando %1$s</string>
+    <string name="download_starting">Iniciando descarga…</string>
+    <string name="download_complete">¡Descarga completa! Guardado en Descargas/E621</string>
+    <string name="download_complete_title">Descarga Completa</string>
+    <string name="download_complete_post">Post #%1$d guardado en Descargas/E621</string>
+    <string name="download_failed">Descarga fallida. Por favor intenta de nuevo.</string>
+    <string name="download_failed_title">Descarga Fallida</string>
+    <string name="download_failed_post">No se pudo descargar el post #%1$d</string>
+    <string name="download_error">Error de descarga: %1$s</string>
+    <string name="download_no_url">No hay URL disponible para descargar</string>
+    <string name="download_in_progress">Descarga ya en progreso…</string>
+    <string name="download_channel_name">Descargas</string>
+    <string name="download_channel_description">Notificaciones de progreso de descarga</string>
+    <string name="storage_permission_denied">Se requiere permiso de almacenamiento</string>
+    
+    <!-- Loading Progress -->
+    <string name="loading_progress">%1$s / %2$s</string>
+    <string name="loading_size">Cargando %1$s…</string>
+    <string name="downloading_progress">Descargando %1$s / %2$s (%3$d%%)</string>
+    
+    <!-- Tags -->
+    <string name="tag_general">General</string>
+    <string name="tag_artist">Artista</string>
+    <string name="tag_copyright">Copyright</string>
+    <string name="tag_character">Personaje</string>
+    <string name="tag_species">Especie</string>
+    <string name="tag_meta">Meta</string>
+    <string name="tag_lore">Lore</string>
+    <string name="tag_invalid">Inválido</string>
+    
+    <!-- Ratings -->
+    <string name="rating_safe">Seguro</string>
+    <string name="rating_questionable">Cuestionable</string>
+    <string name="rating_explicit">Explícito</string>
+    
+    <!-- Settings -->
+    <string name="settings">Ajustes</string>
+    <string name="settings_general">General</string>
+    <string name="settings_theme">Tema</string>
+    <string name="settings_theme_system">Predeterminado del sistema</string>
+    <string name="settings_theme_light">Claro</string>
+    <string name="settings_theme_dark">Oscuro</string>
+    <string name="settings_safe_mode">Modo Seguro (e926)</string>
+    <string name="settings_safe_mode_summary">Usar e926.net (solo contenido SFW)</string>
+    <string name="settings_image_quality">Calidad de imagen</string>
+    <string name="settings_quality_low">Baja</string>
+    <string name="settings_quality_medium">Media</string>
+    <string name="settings_quality_high">Alta</string>
+    <string name="settings_blacklist">Lista negra</string>
+    <string name="settings_cache">Caché</string>
+    <string name="settings_clear_cache">Limpiar caché</string>
+    <string name="settings_cache_cleared">Caché limpiado</string>
+    <string name="settings_about">Acerca de</string>
+    
+    <!-- Blacklist -->
+    <string name="blacklist">Lista negra</string>
+    <string name="blacklist_saved">Lista negra guardada</string>
+    <string name="blacklist_hint">Tags a ocultar…</string>
+    <string name="blacklist_menu_help">Ayuda</string>
+    <string name="share_blacklist">Compartir lista negra</string>
+    <string name="order_alphabetically">Ordenar alfabéticamente</string>
+    
+    <!-- General strings -->
+    <string name="save">Guardar</string>
+    <string name="copy">Copiar</string>
+    <string name="share">Compartir</string>
+    <string name="help">Ayuda</string>
+    <string name="next">Siguiente</string>
+    <string name="restart_app_for_changes">Reinicia la app para aplicar los cambios</string>
+    
+    <!-- Common -->
+    <string name="ok">OK</string>
+    <string name="cancel">Cancelar</string>
+    <string name="error">Error</string>
+    <string name="yes">Sí</string>
+    <string name="no">No</string>
+    <string name="loading">Cargando…</string>
+    <string name="retry">Reintentar</string>
+    <string name="copied_to_clipboard">Copiado al portapapeles</string>
+    <string name="refresh">Actualizar</string>
+    <string name="sort_by">Ordenar por</string>
+    <string name="filter">Filtrar</string>
+    <string name="search">Buscar</string>
+    <string name="delete">Eliminar</string>
+    <string name="sort">Ordenar</string>
+    <string name="clear">Limpiar</string>
+    
+    <!-- Main Menu -->
+    <string name="menu_login">Iniciar sesión</string>
+    <string name="menu_my_account">Mi cuenta</string>
+    <string name="menu_my_profile">Mi perfil</string>
+    <string name="menu_my_favourites">Favoritos</string>
+    <string name="menu_my_upvotes">Votos positivos</string>
+    <string name="menu_my_posts">Posts</string>
+    <string name="menu_my_comments">Comentarios</string>
+    <string name="menu_my_dmail">Dmail</string>
+    <string name="menu_my_sets">Sets</string>
+    <string name="menu_logout">Cerrar sesión</string>
+    <string name="menu_go_to">Ir a</string>
+    <string name="menu_go_to_page">Página</string>
+    <string name="menu_go_to_random">Post aleatorio</string>
+    <string name="menu_go_to_user">Usuario</string>
+    <string name="menu_popular">Popular</string>
+    <string name="menu_popular_day">Popular del día</string>
+    <string name="menu_popular_week">Popular de la semana</string>
+    <string name="menu_popular_month">Popular del mes</string>
+    <string name="menu_browse">Explorar</string>
+    <string name="menu_browse_tags">Tags</string>
+    <string name="menu_browse_pools">Listas</string>
+    <string name="menu_browse_artists">Artistas</string>
+    <string name="menu_browse_comments">Comentarios</string>
+    <string name="menu_browse_sets">Sets</string>
+    <string name="menu_browse_wiki">Wiki</string>
+    <string name="menu_browse_blips">Blips</string>
+    <string name="menu_browse_users">Usuarios</string>
+    <string name="menu_about">Acerca de</string>
+    <string name="menu_about_news">Noticias</string>
+    <string name="menu_about_help">Ayuda</string>
+    <string name="menu_about_about">Acerca de</string>
+    <string name="menu_about_updates">Buscar actualizaciones</string>
+    <string name="menu_about_feedback">Enviar comentarios</string>
+    <string name="menu_about_changelog">Registro de cambios</string>
+    <string name="menu_about_licenses">Licencias</string>
+    <string name="menu_about_translate">Traducir</string>
+    <string name="menu_downloads">Descargas en cola</string>
+    <string name="menu_following_tags">Posts de tags seguidos</string>
+    <string name="menu_donate">Donar ❤️</string>
+    <string name="menu_check_updates">Buscar actualizaciones</string>
+    <string name="menu_settings">Ajustes</string>
+    
+    <!-- Update Checker -->
+    <string name="update_checking">Buscando actualizaciones…</string>
+    <string name="update_available">Actualización disponible: v%1$s</string>
+    <string name="update_no_update">Tienes la última versión</string>
+    <string name="update_error">Error al buscar actualizaciones</string>
+    <string name="update_downloading">Descargando actualización…</string>
+    <string name="update_download_complete">Descarga completa. Instalando…</string>
+    <string name="update_download_error">Error al descargar actualización</string>
+    <string name="update_install_title">Actualización Disponible</string>
+    <string name="update_install_message">Nueva versión (%1$s) disponible.\n\nActual: %2$s\n\n¿Descargar e instalar?</string>
+    <string name="update_download">Descargar</string>
+    <string name="update_later">Más tarde</string>
+    <string name="update_progress">Descargando: %1$d%%</string>
+    
+    <!-- Pools -->
+    <string name="pools_title">Listas</string>
+    <string name="pools_search">Buscar listas…</string>
+    <string name="pools_empty">No se encontraron listas</string>
+    <string name="pool_posts">%1$d posts</string>
+    <string name="pool_title">Lista #%1$d</string>
+    <string name="pool_info">%1$d posts</string>
+    <string name="pool_empty">Esta lista está vacía</string>
+    
+    <!-- Profile -->
+    <string name="profile_title">Perfil</string>
+    <string name="profile_not_logged_in">No has iniciado sesión</string>
+    <string name="profile_favorites">Favoritos</string>
+    <string name="profile_uploads">Subidas</string>
+    <string name="profile_stats">ESTADÍSTICAS</string>
+    <string name="profile_actions">ACCIONES RÁPIDAS</string>
+    <string name="profile_view_favorites">Ver Favoritos</string>
+    <string name="profile_view_uploads">Ver Subidas</string>
+    <string name="profile_joined">Se unió %1$s</string>
+    <string name="profile_user_not_found">Usuario no encontrado</string>
+    
+    <!-- About -->
+    <string name="about_title">Acerca de</string>
+    <string name="about_version">Versión %1$s</string>
+    <string name="about_links">ENLACES</string>
+    <string name="about_website">Sitio web de e621</string>
+    <string name="about_wiki">Wiki de e621</string>
+    <string name="about_terms">Términos de Servicio</string>
+    <string name="about_app_info">INFO DE LA APP</string>
+    
+    <!-- Popular -->
+    <string name="popular_title">Popular</string>
+    <string name="popular_day">Día</string>
+    <string name="popular_week">Semana</string>
+    <string name="popular_month">Mes</string>
+    <string name="popular_empty">No se encontraron posts populares</string>
+    <string name="popular_select_date">Seleccionar fecha</string>
+    <string name="popular_prev">Anterior</string>
+    <string name="popular_next">Siguiente</string>
+    <string name="popular_selected">%1$d seleccionados</string>
+    <string name="popular_download_selected">Descargar seleccionados</string>
+    <string name="popular_clear_selection">Limpiar selección</string>
+    
+    <!-- Selection mode -->
+    <string name="selection_count">%1$d seleccionados</string>
+    <string name="selection_clear">Limpiar selección</string>
+    <string name="selection_select_all">Seleccionar todo</string>
+    <string name="selection_favorite">Añadir a favoritos</string>
+    <string name="selection_download">Descargar seleccionados</string>
+    <string name="selection_downloading">Descargando %1$d posts…</string>
+    <string name="cd_selected">Seleccionado</string>
+
+    <!-- Error Messages -->
+    <string name="error_cloudflare">Acceso bloqueado por CloudFlare.</string>
+    <string name="error_server_down">El servidor no responde.</string>
+    <string name="error_auth_failed">Autenticación fallida.</string>
+    <string name="error_timeout">Tiempo de conexión agotado.</string>
+    <string name="error_no_internet">No se puede alcanzar el servidor.</string>
+    <string name="error_connection">Error de conexión.</string>
+    <string name="error_forbidden">Acceso denegado (403).</string>
+    <string name="error_not_found">Contenido no encontrado (404).</string>
+    <string name="error_http_code">Error del servidor (%1$d).</string>
+    <string name="error_generic">Error: %1$s</string>
+    
+    <!-- Go to dialogs -->
+    <string name="go_to_page_hint">Ingresa número de página</string>
+    <string name="go_to_user_hint">Ingresa nombre de usuario</string>
+    <string name="invalid_page">Número de página inválido</string>
+    <string name="enter_username">Por favor ingresa un nombre de usuario</string>
+    <string name="loading_random">Cargando post aleatorio…</string>
+    <string name="no_posts_found">No se encontraron posts</string>
+    <string name="error_loading">Error al cargar</string>
+    
+    <!-- Comments -->
+    <string name="comments_title">Comentarios</string>
+    <string name="no_comments">No se encontraron comentarios</string>
+    <string name="add_comment">Añadir Comentario</string>
+    <string name="comment_hint">Escribe un comentario…</string>
+    <string name="comment_added">¡Comentario publicado!</string>
+    <string name="comment_error">Error al publicar comentario</string>
+    <string name="vote_up">Votar positivo</string>
+    <string name="vote_down">Votar negativo</string>
+    <string name="avatar">Avatar</string>
+    <string name="sort_newest">Más recientes primero</string>
+    <string name="sort_oldest">Más antiguos primero</string>
+    <string name="sort_score">Por puntuación</string>
+    
+    <!-- Dmail -->
+    <string name="dmail_title">Dmail</string>
+    <string name="no_dmails">Sin mensajes</string>
+    <string name="new_dmail">Nuevo Mensaje</string>
+    <string name="dmail_to">Para</string>
+    <string name="dmail_subject">Asunto</string>
+    <string name="dmail_body">Mensaje</string>
+    <string name="dmail_send">Enviar</string>
+    <string name="dmail_sent">¡Mensaje enviado!</string>
+    <string name="dmail_error">Error al enviar mensaje</string>
+    <string name="dmail_from">De: %1$s</string>
+    <string name="dmail_unread">No leídos</string>
+    <string name="dmail_all">Todos</string>
+    <string name="mail_icon">Correo</string>
+    
+    <!-- Sets -->
+    <string name="sets_title">Sets</string>
+    <string name="no_sets">No se encontraron sets</string>
+    <string name="new_set">Nuevo Set</string>
+    <string name="set_name">Nombre</string>
+    <string name="set_shortname">Nombre corto</string>
+    <string name="set_description">Descripción</string>
+    <string name="set_public">Público</string>
+    <string name="set_private">Privado</string>
+    <string name="set_posts">%1$d posts</string>
+    <string name="set_thumbnail">Miniatura del set</string>
+    <string name="public_set">Set público</string>
+    <string name="search_sets_hint">Buscar sets…</string>
+    
+    <!-- Browse -->
+    <string name="browse_tags_search_hint">Ingresa nombre del tag…</string>
+    <string name="browse_tags_search_message">Buscar tags por nombre</string>
+    <string name="sort_by_date">Ordenar por fecha</string>
+    <string name="sort_by_name">Ordenar por nombre</string>
+    <string name="sort_by_count">Ordenar por cantidad</string>
+    <string name="browse_pools_search_hint">Ingresa nombre de la lista…</string>
+    <string name="browse_pools_search_message">Buscar listas por nombre</string>
+    <string name="browse_users_search_hint">Ingresa nombre de usuario…</string>
+    <string name="browse_users_search_message">Buscar usuarios por nombre</string>
+    <string name="browse_users_hint">Busca un usuario para comenzar</string>
+    <string name="no_results">No se encontraron resultados</string>
+    
+    <!-- Post View -->
+    <string name="post_back_button">Volver</string>
+    <string name="post_description">Descripción</string>
+    <string name="post_sources">Fuentes</string>
+    <string name="post_details">Detalles</string>
+    <string name="post_uploader">Subido por:</string>
+    <string name="post_approver">Aprobado por:</string>
+    <string name="post_status">Estado:</string>
+    <string name="post_rating_label">Clasificación:</string>
+    <string name="post_more">Más opciones</string>
+    <string name="post_error_loading">Error al cargar post</string>
+    <string name="post_open_browser">Abrir en navegador</string>
+    <string name="post_copy_link">Copiar enlace</string>
+    <string name="post_add_to_set">Añadir a set</string>
+    <string name="post_notes">Notas</string>
+    <string name="post_edit">Editar post</string>
+    <string name="post_report">Reportar</string>
+    <string name="tags">Tags</string>
+    <string name="post_deleted">Este post ha sido eliminado</string>
+    <string name="post_no_image">Imagen no disponible</string>
+    <string name="post_vote_success">Voto registrado</string>
+    
+    <!-- Tag Menu -->
+    <string name="tag_menu_search">Buscar</string>
+    <string name="tag_menu_add_saved_search">Añadir a búsquedas guardadas</string>
+    <string name="tag_menu_add_blacklist">Añadir a lista negra</string>
+    <string name="tag_menu_follow">Seguir tag</string>
+    <string name="tag_menu_unfollow">Dejar de seguir tag</string>
+    <string name="tag_menu_add_to_search">Añadir a búsqueda actual</string>
+    <string name="tag_menu_exclude_from_search">Quitar de búsqueda actual</string>
+    <string name="tag_menu_view_wiki">Ver Wiki de este tag</string>
+    <string name="tag_menu_copy">Copiar al portapapeles</string>
+    <string name="tag_copied">Tag copiado al portapapeles</string>
+    
+    <!-- Saved Searches -->
+    <string name="saved_searches_title">Búsquedas Guardadas</string>
+    <string name="saved_searches_empty">Aún no hay búsquedas guardadas.\nToca + para añadir.</string>
+    <string name="add_saved_search">Añadir búsqueda actual</string>
+    <string name="delete_search_confirm">¿Eliminar \"%1$s\"?</string>
+    <string name="search_saved">¡Búsqueda guardada!</string>
+    <string name="search_removed">Búsqueda eliminada</string>
+    <string name="search_already_saved">Esta búsqueda ya está guardada</string>
+    <string name="no_search_to_save">No hay búsqueda para guardar.</string>
+    <string name="saved_menu_clear">Limpiar todo</string>
+    <string name="saved_menu_order_by">Ordenar por</string>
+    <string name="saved_menu_export">Exportar a archivo</string>
+    <string name="saved_menu_import">Importar de archivo</string>
+    
+    <!-- Preferences Categories -->
+    <string name="pref_category_general">General</string>
+    <string name="pref_category_following">Seguimiento</string>
+    <string name="pref_category_searching">Búsqueda</string>
+    <string name="pref_category_grid">Vista de cuadrícula</string>
+    <string name="pref_category_post">Vista de post</string>
+    <string name="pref_category_storage">Almacenamiento</string>
+    <string name="pref_category_export">Exportar / Importar</string>
+    <string name="pref_category_privacy">Privacidad</string>
+    <string name="pref_category_network">Red</string>
+    <string name="pref_category_about">Acerca de</string>
+    
+    <!-- General Preferences -->
+    <string name="pref_general_language_title">Idioma</string>
+    <string name="pref_general_language_summary">%s</string>
+    <string name="pref_general_edit_host_title">Host</string>
+    <string name="pref_consent_above_18_title">Consentimiento de edad</string>
+    <string name="pref_consent_above_18_summary">Confirma que eres mayor de 18</string>
+    <string name="pref_general_dark_mode_title">Tema</string>
+    <string name="pref_general_dark_mode_summary">%s</string>
+    <string name="pref_general_post_quality_title">Calidad de post</string>
+    <string name="pref_general_post_quality_summary">Calidad para ver posts</string>
+    <string name="pref_general_thumb_quality_title">Calidad de miniatura</string>
+    <string name="pref_general_thumb_quality_summary">Calidad para miniaturas</string>
+    <string name="pref_general_blacklist_enable_title">Lista negra habilitada</string>
+    <string name="pref_general_blacklist_enable_summary">Ocultar posts con tags en lista negra</string>
+    <string name="pref_general_blacklist_title">Editar lista negra</string>
+    <string name="pref_general_hide_in_task_title">Ocultar en tareas recientes</string>
+    <string name="pref_general_hide_in_task_summary">Ocultar app de apps recientes</string>
+    <string name="pref_general_disguise_title">Modo disfraz</string>
+    <string name="pref_general_disguise_summary">Cambiar icono y nombre de la app</string>
+    <string name="pref_consent_pin_unlock_title">Desbloqueo con PIN</string>
+    <string name="pref_consent_pin_unlock_summary">Requerir PIN para abrir la app</string>
+    <string name="pref_consent_biometrics_title">Desbloqueo biométrico</string>
+    <string name="pref_consent_biometrics_summary">Usar huella para desbloquear</string>
+    
+    <!-- Following Preferences -->
+    <string name="pref_following_enabled_title">Seguimiento habilitado</string>
+    <string name="pref_following_enabled_summary">Habilitar seguimiento de tags</string>
+    <string name="pref_following_manage_title">Administrar tags</string>
+    <string name="pref_following_manage_summary">Ver y editar tags seguidos</string>
+    <string name="pref_following_only_unmetered_title">Solo Wi-Fi</string>
+    <string name="pref_following_only_unmetered_summary">Solo verificar en Wi-Fi</string>
+    <string name="pref_following_period_title">Período de verificación</string>
+    <string name="pref_following_period_summary">Frecuencia de verificación</string>
+    
+    <!-- Storage Preferences -->
+    <string name="pref_storage_clear_cache_title">Limpiar caché</string>
+    <string name="pref_storage_clear_cache_summary">Limpiar imágenes y videos en caché</string>
+    <string name="pref_storage_cache_cleared">Caché limpiado exitosamente</string>
+    <string name="pref_storage_cache_size">Tamaño actual del caché: %1$s</string>
+    <string name="pref_category_cache">Caché</string>
+    
+    <!-- Language arrays -->
+    <string name="arrays_language_english">Inglés (English)</string>
+    <string name="arrays_language_spanish">Español (Spanish)</string>
+</resources>

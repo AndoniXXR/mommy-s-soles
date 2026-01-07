@@ -23,6 +23,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
+import androidx.core.os.LocaleListCompat
 import androidx.biometric.BiometricManager
 import androidx.fragment.app.Fragment
 import androidx.preference.EditTextPreference
@@ -45,6 +46,7 @@ import java.security.GeneralSecurityException
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import android.content.res.Configuration
 import javax.crypto.Cipher
 import javax.crypto.SecretKeyFactory
 import javax.crypto.spec.IvParameterSpec
@@ -60,6 +62,24 @@ class SettingsActivity : AppCompatActivity(),
     
     companion object {
         const val RESULT_HOST_CHANGED = Activity.RESULT_FIRST_USER + 1
+    }
+
+    override fun attachBaseContext(newBase: Context) {
+        val prefs = newBase.getSharedPreferences("${newBase.packageName}_preferences", Context.MODE_PRIVATE)
+        val languageCode = prefs.getString("general_language", "en") ?: "en"
+        
+        if (languageCode != "system" && languageCode.isNotEmpty()) {
+            val locale = Locale.forLanguageTag(languageCode)
+            Locale.setDefault(locale)
+            
+            val config = Configuration(newBase.resources.configuration)
+            config.setLocale(locale)
+            
+            val context = newBase.createConfigurationContext(config)
+            super.attachBaseContext(context)
+        } else {
+            super.attachBaseContext(newBase)
+        }
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -723,14 +743,39 @@ class SettingsActivity : AppCompatActivity(),
         
         private fun setupLanguagePreference() {
             findPreference<ListPreference>("general_language")?.apply {
-                value = prefs.language
+                // Read from the correct preferences file (PreferenceFragment uses packageName_preferences)
+                val defaultPrefs = requireContext().getSharedPreferences(
+                    "${requireContext().packageName}_preferences",
+                    Context.MODE_PRIVATE
+                )
+                val currentLang = defaultPrefs.getString("general_language", "system") ?: "system"
+                value = currentLang
+                
                 setOnPreferenceChangeListener { _, newValue ->
-                    prefs.language = newValue as String
-                    Toast.makeText(
-                        requireContext(),
-                        R.string.restart_app_for_changes,
-                        Toast.LENGTH_LONG
-                    ).show()
+                    val languageCode = newValue as String
+                    
+                    // Save to the default preferences file (used by PreferenceFragment and attachBaseContext)
+                    val sharedPrefs = requireContext().getSharedPreferences(
+                        "${requireContext().packageName}_preferences",
+                        Context.MODE_PRIVATE
+                    )
+                    sharedPrefs.edit().putString("general_language", languageCode).commit()
+                    
+                    // Also save to UserPreferences file for consistency
+                    val userPrefs = requireContext().getSharedPreferences(
+                        "e621_client_prefs",
+                        Context.MODE_PRIVATE
+                    )
+                    userPrefs.edit().putString("general_language", languageCode).commit()
+                    
+                    // Restart the app to apply language change
+                    Handler(Looper.getMainLooper()).postDelayed({
+                        val intent = Intent(requireContext(), com.e621.client.ui.LauncherActivity::class.java)
+                        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
+                        requireContext().startActivity(intent)
+                        Runtime.getRuntime().exit(0)
+                    }, 300)
+                    
                     true
                 }
             }

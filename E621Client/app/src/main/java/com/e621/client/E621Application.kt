@@ -1,9 +1,14 @@
 package com.e621.client
 
 import android.app.Application
+import android.content.Context
 import android.content.Intent
+import android.content.res.Configuration
+import android.os.Build
 import androidx.appcompat.app.AppCompatDelegate
+import androidx.core.os.LocaleListCompat
 import androidx.work.Constraints
+import java.util.Locale
 import androidx.work.ExistingPeriodicWorkPolicy
 import androidx.work.NetworkType
 import androidx.work.PeriodicWorkRequestBuilder
@@ -44,6 +49,9 @@ class E621Application : Application() {
         // Apply theme globally at app startup
         applyTheme()
         
+        // Apply saved language at app startup
+        applyLanguage()
+        
         // Initialize API
         api = E621Api.create(userPreferences)
         
@@ -68,6 +76,47 @@ class E621Application : Application() {
             1 -> AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
             2 -> AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES)
             else -> AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM)
+        }
+    }
+    
+    /**
+     * Apply language based on user preferences
+     */
+    private fun applyLanguage() {
+        val languageCode = userPreferences.language
+        if (languageCode != "system" && languageCode.isNotEmpty()) {
+            val locale = Locale.forLanguageTag(languageCode)
+            Locale.setDefault(locale)
+            
+            val config = Configuration(resources.configuration)
+            config.setLocale(locale)
+            resources.updateConfiguration(config, resources.displayMetrics)
+        }
+        
+        // Also set via AppCompatDelegate for Activities
+        val localeList = if (languageCode == "system" || languageCode.isEmpty()) {
+            LocaleListCompat.getEmptyLocaleList()
+        } else {
+            LocaleListCompat.forLanguageTags(languageCode)
+        }
+        AppCompatDelegate.setApplicationLocales(localeList)
+    }
+    
+    override fun attachBaseContext(base: Context) {
+        val prefs = base.getSharedPreferences("${base.packageName}_preferences", Context.MODE_PRIVATE)
+        val languageCode = prefs.getString("general_language", "en") ?: "en"
+        
+        if (languageCode != "system" && languageCode.isNotEmpty()) {
+            val locale = Locale.forLanguageTag(languageCode)
+            Locale.setDefault(locale)
+            
+            val config = Configuration(base.resources.configuration)
+            config.setLocale(locale)
+            
+            val context = base.createConfigurationContext(config)
+            super.attachBaseContext(context)
+        } else {
+            super.attachBaseContext(base)
         }
     }
     

@@ -824,11 +824,18 @@ class MainActivity : BaseActivity(), PostPageAdapter.OnPostClickListener {
                 // Cancel previous search
                 searchJob?.cancel()
                 
+                // Don't show dropdown if activity is not in a valid state (e.g., during recreation)
+                if (isFinishing || isDestroyed) return true
+                
                 val query = newText?.trim() ?: ""
                 if (query.isEmpty()) {
                     // Show search history when empty
                     showSearchHistory()
-                    searchAutoComplete?.showDropDown()
+                    try {
+                        searchAutoComplete?.showDropDown()
+                    } catch (e: Exception) {
+                        // Ignore BadTokenException during activity recreation
+                    }
                     return true
                 }
                 
@@ -843,12 +850,16 @@ class MainActivity : BaseActivity(), PostPageAdapter.OnPostClickListener {
         
         // Show history when search view is focused
         searchAutoComplete?.setOnFocusChangeListener { _, hasFocus ->
-            if (hasFocus && !isNavigatingBack) {
-                // Always show history when focused (but not during back navigation)
+            if (hasFocus && !isNavigatingBack && !isFinishing && !isDestroyed) {
+                // Always show history when focused (but not during back navigation or recreation)
                 showSearchHistory()
                 searchAutoComplete?.post {
-                    if (!isNavigatingBack) {
-                        searchAutoComplete?.showDropDown()
+                    if (!isNavigatingBack && !isFinishing && !isDestroyed) {
+                        try {
+                            searchAutoComplete?.showDropDown()
+                        } catch (e: Exception) {
+                            // Ignore BadTokenException during activity recreation
+                        }
                     }
                 }
             } else if (!hasFocus) {

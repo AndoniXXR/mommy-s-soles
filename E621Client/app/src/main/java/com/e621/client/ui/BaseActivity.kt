@@ -1,11 +1,14 @@
 package com.e621.client.ui
 
+import android.content.Context
 import android.content.Intent
+import android.content.res.Configuration
 import android.os.Bundle
 import android.view.WindowManager
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
 import com.e621.client.E621Application
+import java.util.Locale
 
 /**
  * Base Activity that applies common settings to all activities:
@@ -16,6 +19,24 @@ import com.e621.client.E621Application
 abstract class BaseActivity : AppCompatActivity() {
 
     protected val prefs by lazy { E621Application.instance.userPreferences }
+
+    override fun attachBaseContext(newBase: Context) {
+        val prefs = newBase.getSharedPreferences("${newBase.packageName}_preferences", Context.MODE_PRIVATE)
+        val languageCode = prefs.getString("general_language", "en") ?: "en"
+        
+        if (languageCode != "system" && languageCode.isNotEmpty()) {
+            val locale = Locale.forLanguageTag(languageCode)
+            Locale.setDefault(locale)
+            
+            val config = Configuration(newBase.resources.configuration)
+            config.setLocale(locale)
+            
+            val context = newBase.createConfigurationContext(config)
+            super.attachBaseContext(context)
+        } else {
+            super.attachBaseContext(newBase)
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         // Check if application is properly initialized
