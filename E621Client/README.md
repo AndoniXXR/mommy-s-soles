@@ -41,7 +41,15 @@ An unofficial Android client for e621.net and e926.net image boards. This applic
 - PIN code lock for privacy
 - Auto-update checker with in-app installation
 
-## Recent Updates (v1.1.3)
+## Recent Updates (v1.1.8)
+
+### 🌐 Spanish Localization
+- **Language Support:** Added Spanish (Español) language support
+- **Language Selector:** New option in Settings → General → Language
+- **Runtime Switching:** Language changes apply immediately after app restart
+- **Default Language:** English is now the default language
+
+## Previous Updates (v1.1.3)
 
 ### 🚀 New Features
 - **Automatic Update Checker:** Daily background check for new versions using WorkManager. Shows notification when update is available.
@@ -259,6 +267,11 @@ This is an unofficial client and is not affiliated with or endorsed by e621.net.
 Contributions are welcome. Please open an issue or submit a pull request.
 
 ## Version History
+
+- **1.1.8** - Spanish Localization
+  - Added Spanish language support
+  - Language selector in Settings
+  - Runtime language switching
 
 - **1.1.3** - Children posts & auto-updates
   - Automatic daily update checking with notifications
